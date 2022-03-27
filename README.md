@@ -45,6 +45,7 @@ $ python week3/task_{id_task}.py
 ```
 
 The CVPR paper corresponding to all the tasks and experiments devoted to Object Detection and Instance Segmentation can be seen in: [Paper](https://www.overleaf.com/read/hcbxsbkrsmcb)
+**NOTE: The new version of the paper contains further improvements to week 2 results. We apply new splits to obtain more balanced annotations, revaluate pre-trained models with COCO and perform fine-tuning with KITTI.
 
 ## References
 [1] Ren, Shaoqing, et al. "Faster r-cnn: Towards real-time object detection with region proposal networks." Advances in neural information processing systems 28 (2015).
