@@ -1,0 +1,24 @@
+{
+    "os": "Linux-5.13.0-39-generic-x86_64-with-glibc2.17",
+    "python": "3.8.12",
+    "heartbeatAt": "2022-04-01T08:38:28.987554",
+    "startedAt": "2022-04-01T08:38:28.331318",
+    "docker": null,
+    "gpu": "NVIDIA GeForce RTX 3060",
+    "gpu_count": 1,
+    "cpu_count": 12,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/home/david/Workspace/M5/week1/train.py",
+    "codePath": "week1/train.py",
+    "git": {
+        "remote": "https://github.com/davidserra9/M5.git",
+        "commit": "54af9fcb6f7a27170528e7fc8084627de1603166"
+    },
+    "email": "99d.serrano@gmail.com",
+    "root": "/home/david/Workspace/M5",
+    "host": "ubuntut",
+    "username": "david",
+    "executable": "/home/david/miniconda3/envs/MCV/bin/python"
+}

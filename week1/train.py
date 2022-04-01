@@ -22,7 +22,7 @@ NUM_EPOCHS = 200
 NUM_WORKERS = 4
 PIN_MEMORY = True       # To speed up the file transfer to CPU to GPU
 LOAD_MODEL = False      # If True the stored weights will be laoded
-ROOT_PATH = ""
+ROOT_PATH = "../../data/"
 TRAIN_IMG_DIR = ROOT_PATH + "MIT_split/train/"
 TEST_IMG_DIR = ROOT_PATH + "MIT_split/test/"
 
@@ -55,7 +55,7 @@ def train_fn(loader, model, optimizer, loss_fn, scaler, device, epoch_num):
 
     model.train()                       # Train mode
     epoch_start = datetime.today()
-    loop = tqdm(loader, desc=f'EPOCH {epoch_num} TRAIN')  # Create the tqdm bar for visualizing the progress.
+    loop = tqdm(loader, desc=f'EPOCH {epoch_num} TRAIN', leave=False)  # Create the tqdm bar for visualizing the progress.
     iterations = loop.__len__()
     correct = 0     # accumulated correct predictions
     total_samples = 0       # accumulated total predictions
@@ -122,7 +122,7 @@ def eval_fn(loader, model, loss_fn, device, epoch_num):
     model.eval()                        # Put the model in evaluation mode
     epoch_start = datetime.today()
 
-    loop = tqdm(loader, desc=f'EPOCH {epoch_num}  TEST')  # Create the tqdm bar for visualizing the progress.
+    loop = tqdm(loader, desc=f'EPOCH {epoch_num}  TEST', leave=False)  # Create the tqdm bar for visualizing the progress.
     iterations = loop.__len__()
     correct = 0     # accumulated correct predictions
     total_samples = 0       # accumulated total predictions
