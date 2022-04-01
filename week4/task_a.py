@@ -101,7 +101,7 @@ def generate_labels_test():
     for idx_folder, folder in enumerate(os.listdir(PATH_ROOT)):
         folder_path = os.path.join(PATH_TEST, folder)
         # generate array of size count of idx_folder number of times
-        labels.extend([idx_folder] * len(os.listdir(folder_path)))
+        labels.extend([[idx_folder]] * len(os.listdir(folder_path)))
     return labels
 
 
