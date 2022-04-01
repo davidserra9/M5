@@ -109,6 +109,10 @@ def generate_labels_test():
 
 
 def compute_prec_recall_and_map_for_k():
+    """
+    Compute the precision, recall and MAP for k.
+    :return: the precision, recall and MAP for k
+    """
     with torch.no_grad():
         # Number of iterations of k
         n_iterations = 10
