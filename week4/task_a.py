@@ -5,8 +5,7 @@ import torch
 import os.path
 from os import path
 import faiss
-from sklearn.metrics import average_precision_score
-from evaluation_metrics import mapk
+from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall
 
 PATH_ROOT = '../../data/MIT_split/train/'
 PATH_TEST = '../../data/MIT_split/test/'
@@ -105,6 +104,7 @@ def generate_labels_test():
     return labels
 
 
+
 if __name__=="__main__":
 
     # Initialize the model
@@ -116,7 +116,7 @@ if __name__=="__main__":
     print(model)
 
     # Number of retrievals
-    num_retrievals = 5
+    num_retrievals = 1
 
     with torch.no_grad():
         # Obtain the features of the images: TRAIN
@@ -124,11 +124,15 @@ if __name__=="__main__":
         features_test = compute_features(model, img_path=PATH_TEST, train_db=False)
 
         # Retrieve the images from the test set that are similar to the image in the train set. retrieve_imgs returns
-        # the indexes of the retrieved images and we map them to the corresponding labels
+        # the indexes of the retrieved images, and we map them to the corresponding labels
         retrievals = map_idxs_to_targets(retrieve_imgs(features_train, features_test, k=num_retrievals))
         labels_test = generate_labels_test()
 
         mapk = mapk(labels_test, retrievals, k=num_retrievals)
+        print(f'map{num_retrievals}: {mapk}')
+
+        confusion_matrix = plot_confusion_matrix(labels_test, retrievals)
+        prec, recall = table_precision_recall(confusion_matrix)
 
         print('finished!')
 
