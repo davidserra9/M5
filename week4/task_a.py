@@ -1,3 +1,7 @@
+# todo: plotear precision - recall curve
+# todo: plotear representacion del espacio (PCA, TSNE, UMAP)
+# todo: plotear mprecision@k, mrecall@k y map@k (solo faltan graficas, lo demas ya esta)
+
 import cv2
 import numpy as np
 import os
@@ -104,6 +108,52 @@ def generate_labels_test():
     return labels
 
 
+def compute_prec_recall_and_map_for_k():
+    with torch.no_grad():
+        # Number of iterations of k
+        n_iterations = 10
+        precision_k = np.zeros(n_iterations)
+        reccall_k = np.zeros(n_iterations)
+        map_k = np.zeros(n_iterations)
+
+        # Obtain the features of the images: TRAIN
+        features_train = compute_features(model, img_path=PATH_ROOT, train_db=True)
+        features_test = compute_features(model, img_path=PATH_TEST, train_db=False)
+
+        for k in range(n_iterations):
+            num_retrievals = k + 1
+
+            # Retrieve the images from the test set that are similar to the image in the train set. retrieve_imgs returns
+            # the indexes of the retrieved images, and we map them to the corresponding labels
+            retrievals = map_idxs_to_targets(retrieve_imgs(features_train, features_test, k=num_retrievals))
+            labels_test = generate_labels_test()
+
+            # compute the map@k
+            mapk_result = mapk(labels_test, retrievals, k=num_retrievals)
+
+            # new_retrievals is a list of lists, each list contains the indexes of the retrieved images
+            # it is created in order to be compatible with the function plot_confusion_matrix
+            new_retrievals = []
+            for idx, retrieval in enumerate(retrievals):
+                if labels_test[idx] in retrieval:
+                    new_retrievals.append(labels_test[idx])
+                else:
+                    new_retrievals.append([retrieval[0]])
+
+            # compute the confusion matrix
+            confusion_matrix = plot_confusion_matrix(labels_test, new_retrievals, show=False)
+
+            # compute the precision and recall
+            prec, recall = table_precision_recall(confusion_matrix, show=False)
+
+            # append values to the arrays. For prec and recall we use the mean of all classes
+            map_k[k] = mapk_result
+            # 'How k's it takes in order to get a image of the value of the target class'. Compute prec and rec
+            precision_k[k] = np.mean(prec)
+            reccall_k[k] = np.mean(recall)
+
+        return map_k, precision_k, reccall_k
+
 
 if __name__=="__main__":
 
@@ -117,6 +167,7 @@ if __name__=="__main__":
 
     # Number of retrievals
     num_retrievals = 1
+    plot_prec_and_recall_k = True
 
     with torch.no_grad():
         # Obtain the features of the images: TRAIN
@@ -128,13 +179,24 @@ if __name__=="__main__":
         retrievals = map_idxs_to_targets(retrieve_imgs(features_train, features_test, k=num_retrievals))
         labels_test = generate_labels_test()
 
-        mapk = mapk(labels_test, retrievals, k=num_retrievals)
-        print(f'map{num_retrievals}: {mapk}')
+        mapk_result = mapk(labels_test, retrievals, k=num_retrievals)
+        print(f'map{num_retrievals}: {mapk_result}')
 
-        confusion_matrix = plot_confusion_matrix(labels_test, retrievals)
+
+        confusion_matrix = plot_confusion_matrix(labels_test, retrievals, show=True)
         prec, recall = table_precision_recall(confusion_matrix)
 
-        print('finished!')
+        # todo: plotear precision - recall curve
+        # todo: plotear representacion del espacio (PCA, TSNE, UMAP)
+
+    if plot_prec_and_recall_k:
+        map_k, precision_k, reccall_k = compute_prec_recall_and_map_for_k()
+
+        print(f'map@k: {map_k}')
+        print(f'precision@k: {precision_k}')
+        print(f'recall@k: {reccall_k}')
+
+        # todo: plotear mprecision@k, mrecall@k y map@k (solo faltan graficas, lo demas ya esta)
 
 
 

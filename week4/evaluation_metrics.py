@@ -64,7 +64,7 @@ def mapk(actual, predicted, k):
     return np.mean([apk(a,p,k) for a,p in zip(actual, predicted)])
 
 
-def plot_confusion_matrix(ground_truth, predicted):
+def plot_confusion_matrix(ground_truth, predicted, show=False):
     """
     Plot the confusion matrix. MUST BE MAP1
     Parameters
@@ -84,22 +84,24 @@ def plot_confusion_matrix(ground_truth, predicted):
     predicted = [item for sublist in predicted for item in sublist]
     # compute the confusion matrix
     cm = confusion_matrix(ground_truth, predicted)
-    plt.figure(figsize=(9,9))
-    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
-    plt.title("Confusion matrix")
-    plt.colorbar()
-    tick_marks = ['forest', 'opencountry', 'tallbuilding', 'mountain', 'street', 'insidecity', 'coast', 'highway']
-    plt.xticks(np.arange(8), tick_marks, rotation=45)
-    plt.yticks(np.arange(8), tick_marks)
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    plt.show()
+
+    if show:
+        plt.figure(figsize=(9,9))
+        plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+        plt.title("Confusion matrix")
+        plt.colorbar()
+        tick_marks = ['forest', 'opencountry', 'tallbuilding', 'mountain', 'street', 'insidecity', 'coast', 'highway']
+        plt.xticks(np.arange(8), tick_marks, rotation=45)
+        plt.yticks(np.arange(8), tick_marks)
+        plt.tight_layout()
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+        plt.show()
 
     return cm
 
 
-def table_precision_recall(cm):
+def table_precision_recall(cm, show=False):
 
     # compute the precision-recall curve
     tp = np.diag(cm)
@@ -109,22 +111,24 @@ def table_precision_recall(cm):
     # for prec and rec compute the round to 4 decimal places
     prec = [round(x, 4) for x in prec]
     rec = [round(x, 4) for x in rec]
-
-    fig, ax = plt.subplots(1, 1)
-    data = [prec,
-            rec]
-    column_labels = ['forest', 'opencountry', 'tallbuilding', 'mountain', 'street', 'insidecity', 'coast', 'highway']
-    df = pd.DataFrame(data, columns=column_labels)
-    ax.axis('tight')
-    ax.axis('off')
-    ax.table(cellText=df.values,
-             colLabels=df.columns,
-             rowLabels=["Precision", "Recall"],
-             rowColours=["yellow"] * 8,
-             colColours=["yellow"] * 8,
-             loc="center",
-             fontSize=100)
-    plt.show()
+    if show:
+        fig, ax = plt.subplots(1, 1)
+        data = [prec,
+                rec]
+        column_labels = ['forest', 'opencountry', 'tallbuilding', 'mountain', 'street', 'insidecity', 'coast', 'highway']
+        df = pd.DataFrame(data, columns=column_labels)
+        ax.axis('tight')
+        ax.axis('off')
+        ax.table(cellText=df.values,
+                 colLabels=df.columns,
+                 rowLabels=["Precision", "Recall"],
+                 rowColours=["yellow"] * 8,
+                 colColours=["yellow"] * 8,
+                 loc="center",
+                 fontSize=100)
+        plt.show()
 
     return prec, rec
+
+
 
