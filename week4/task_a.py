@@ -13,7 +13,7 @@ import faiss
 from tqdm import tqdm
 from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation, plot_prec_recall_map_k
 import matplotlib.pyplot as plt
-from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation
+from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation, plot_image_retrievals
 
 # To avoid FAIS crashing
 import mkl
@@ -105,19 +105,54 @@ def map_idxs_to_targets(retrievals):
     :return: the list of the retrieved images labels
     """
     count = 0
-    # create a copy of retrievals
-    retrievals_copy = retrievals.copy()
-
+    retrievals_idx = retrievals.copy()
     for idx_folder, folder in enumerate(os.listdir(PATH_ROOT)):
         folder_path = os.path.join(PATH_ROOT, folder)
         # count the elements inside the folder
         for counter_retrievals_class, retrieval in enumerate(retrievals):
             for idx_retrieval, index_of_img_retrieved in enumerate(retrieval):
                 if count <= index_of_img_retrieved < count + len(os.listdir(folder_path)):
-                    retrievals[counter_retrievals_class][idx_retrieval] = idx_folder
+                    retrievals_idx[counter_retrievals_class][idx_retrieval] = idx_folder
         count += len(os.listdir(folder_path))
 
-    return retrievals, retrievals_copy
+    return retrievals, retrievals_idx
+
+def map_all_query_paths(test_path):
+    """
+    Map all the paths of the images in the test set to the corresponding folder.
+    :param test_path: the path to the test set
+    :return: the list of the paths of the images in the test set
+    """
+    test_paths = []
+    for folder in tqdm(os.listdir(test_path), desc='Mapping paths'):
+        folder_path = os.path.join(test_path, folder)
+        for image in os.listdir(folder_path):
+            test_paths.append(os.path.join(folder_path, image))
+
+    return test_paths
+
+
+def map_idxs_to_paths(img_idxs):
+    """
+    Convert the retrieved images indexes to the corresponding paths.
+    :param img_idxs: the list of retrieved images indexes
+    :return: the list of the retrieved images paths
+    """
+    # List of lists containing the paths of the retrieved images
+    paths = []
+
+    for retrievals in tqdm(img_idxs, desc='Mapping paths'):
+        img_path_retrievals = []
+        for retrieval_idx in retrievals:
+            count = 0
+            for idx_folder, folder in enumerate(os.listdir(PATH_ROOT)):
+                folder_path = os.path.join(PATH_ROOT, folder)
+                if (count <= retrieval_idx) and (retrieval_idx < count + len(os.listdir(folder_path))):
+                    img_path_retrievals.append(os.path.join(folder_path, os.listdir(folder_path)[retrieval_idx - count]))
+                    break
+                count += len(os.listdir(folder_path))
+        paths.append(img_path_retrievals)
+    return paths
 
 
 def generate_labels_test():
@@ -154,7 +189,7 @@ def compute_prec_recall_and_map_for_k():
 
             # Retrieve the images from the test set that are similar to the image in the train set. retrieve_imgs returns
             # the indexes of the retrieved images, and we map them to the corresponding labels
-            retrievals = map_idxs_to_targets(retrieve_imgs(features_train, features_test, k=num_retrievals))
+            retrievals, _ = map_idxs_to_targets(retrieve_imgs(features_train, features_test, k=num_retrievals))
             labels_test = generate_labels_test()
 
             # compute the map@k
@@ -195,7 +230,7 @@ if __name__=="__main__":
     saveRes = True
 
     # Initialize the model. delete pickle file of train and test if you want to recompute the features!
-    name_model = 'resnet18'
+    name_model = 'resnet50'
 
     model = torch.hub.load('pytorch/vision:v0.10.0', name_model, pretrained=True)
     print(model)
@@ -211,14 +246,21 @@ if __name__=="__main__":
 
         # Retrieve the images from the test set that are similar to the image in the train set. retrieve_imgs returns
         # the indexes of the retrieved images, and we map them to the corresponding labels
-        retrievals = map_idxs_to_targets(retrieve_imgs(features_train, features_test, k=num_retrievals))
+        retrieved_imgs = retrieve_imgs(features_train, features_test, k=num_retrievals)
+        retrieval_idx, retrieval_classes = map_idxs_to_targets(retrieved_imgs)
         labels_test = generate_labels_test()
 
-        mapk_result = mapk(labels_test, retrievals, k=num_retrievals)
+        # Plot query-retrieved images
+        query_paths = map_all_query_paths(PATH_TEST)
+        retrieve_paths = map_idxs_to_paths(retrieval_idx)
+        plot_image_retrievals(query_paths, retrieve_paths, k=5)
+
+        mapk_result = mapk(labels_test, retrieval_classes, k=num_retrievals)
         print(f'map{num_retrievals}: {mapk_result}')
 
-        confusion_matrix = plot_confusion_matrix(labels_test, retrievals, show=False)
-        prec, recall = table_precision_recall(confusion_matrix, show=False)
+        if num_retrievals == 1:
+            confusion_matrix = plot_confusion_matrix(labels_test, retrieval_classes, show=False)
+            prec, recall = table_precision_recall(confusion_matrix, show=False)
 
         # todo: plotear precision - recall curve
 

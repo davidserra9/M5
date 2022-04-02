@@ -15,6 +15,7 @@ from sklearn.decomposition import PCA
 import matplotlib.patheffects as PathEffects
 import matplotlib.colors as mcolors
 import umap
+import cv2
 
 def apk(actual, predicted, k):
     """
@@ -264,6 +265,25 @@ def plot_prec_recall_map_k(type=None, **lists_k):
     plt.ylabel(type)
     plt.legend()
     plt.show()
+
+def plot_image_retrievals(queries, retrivals, k=5):
+    random_queries = np.random.randint(len(queries), size=k)
+
+    fig, ax = plt.subplots(k, len(retrivals[0]) + 1)
+    for i, query_num in enumerate(random_queries):
+        query_path = queries[query_num]
+        retrieval_paths = retrivals[query_num]
+        query_image = cv2.imread(query_path)[:,:,::-1]
+        ax[i, 0].imshow(query_image)
+        ax[i, 0].set_title(query_path.split('/')[-2])
+        ax[i, 0].axis('off')
+        for j, retrieval_path in enumerate(retrieval_paths):
+            retrieval_image = cv2.imread(retrieval_path)[:,:,::-1]
+            ax[i, j + 1].imshow(retrieval_image)
+            ax[i, j + 1].set_title(retrieval_path.split('/')[-2])
+            ax[i, j + 1].axis('off')
+    plt.show()
+
 
 
 
