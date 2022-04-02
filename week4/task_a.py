@@ -105,6 +105,9 @@ def map_idxs_to_targets(retrievals):
     :return: the list of the retrieved images labels
     """
     count = 0
+    # create a copy of retrievals
+    retrievals_copy = retrievals.copy()
+
     for idx_folder, folder in enumerate(os.listdir(PATH_ROOT)):
         folder_path = os.path.join(PATH_ROOT, folder)
         # count the elements inside the folder
@@ -114,7 +117,7 @@ def map_idxs_to_targets(retrievals):
                     retrievals[counter_retrievals_class][idx_retrieval] = idx_folder
         count += len(os.listdir(folder_path))
 
-    return retrievals
+    return retrievals, retrievals_copy
 
 
 def generate_labels_test():
@@ -192,7 +195,7 @@ if __name__=="__main__":
     saveRes = True
 
     # Initialize the model. delete pickle file of train and test if you want to recompute the features!
-    name_model = 'resnet101'
+    name_model = 'resnet18'
 
     model = torch.hub.load('pytorch/vision:v0.10.0', name_model, pretrained=True)
     print(model)
@@ -218,10 +221,7 @@ if __name__=="__main__":
         prec, recall = table_precision_recall(confusion_matrix, show=False)
 
         # todo: plotear precision - recall curve
-        plt.plot(prec, recall)
-        plt.show()
 
-        # todo: plotear representacion del espacio (PCA, TSNE, UMAP)
         image_representation(features_test, classes_test, type='umap')
 
     if plot_prec_and_recall_k:
