@@ -11,6 +11,10 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import LinearSVC
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+import matplotlib.patheffects as PathEffects
+import matplotlib.colors as mcolors
+import umap
 
 def apk(actual, predicted, k):
     """
@@ -150,10 +154,40 @@ def image_representation(features, classes, type='tsne'):
     score : double
             The mean average precision at k over the input lists
     """
-    color_palette = np.array(sns.color_palette("hls", len(np.unique(classes))))
-    color_map = dict(zip(np.unique(classes), color_palette))
+    # Create the color palette
+    color_palette = [c for c in list(mcolors.TABLEAU_COLORS)[:len(classes)]]
 
-    if type == 'tsne':
+    # --- PCA ---
+    if type == 'pca':
+        # Create the PCA instance
+        pca = PCA(n_components=2)
+        pca.fit(features)
+        pca_features = pca.transform(features)
+        labels = np.unique(classes)
+
+        for idx, label in enumerate(labels):
+            label_features = [pca_features[i] for i, x in enumerate(classes) if x == label]
+            plt.scatter(
+                [x[0] for x in label_features],
+                [x[1] for x in label_features],
+                c=color_palette[idx],
+                label=f'{idx}-{label}',
+            )
+        plt.legend(loc='best')
+
+        for idx, label in enumerate(labels):
+            label_features = [pca_features[i] for i, x in enumerate(classes) if x == label]
+            xtext, ytext = np.median(label_features, axis=0)
+            txt = plt.text(xtext, ytext, str(idx))
+            txt.set_path_effects([
+                PathEffects.Stroke(linewidth=5, foreground="w"),
+                PathEffects.Normal()])
+
+        plt.title('2D PCA representation of the image features')
+        plt.show()
+
+    # --- TSNE ---
+    elif type == 'tsne':
         # compute the t-SNE image representation
         tsne = TSNE(n_components=2, random_state=0, learning_rate='auto', init='pca')
         tsne_features = tsne.fit_transform(features)
@@ -166,25 +200,53 @@ def image_representation(features, classes, type='tsne'):
 
         for idx, label in enumerate(labels):
             label_features = [tsne_features[i] for i, x in enumerate(classes) if x == label]
-            for feature in label_features:
-                plt.scatter(features[0],
-                            features[1],
-                            c=np.array(color_palette[idx]))
+            plt.scatter(
+                [x[0] for x in label_features],
+                [x[1] for x in label_features],
+                c=color_palette[idx],
+                label=f'{idx}-{label}',
+            )
+
+        plt.legend(loc='best')
+
+        for idx, label in enumerate(labels):
+            label_features = [tsne_features[i] for i, x in enumerate(classes) if x == label]
+            xtext, ytext = np.median(label_features, axis=0)
+            txt = plt.text(xtext, ytext, str(idx))
+            txt.set_path_effects([
+                PathEffects.Stroke(linewidth=5, foreground="w"),
+                PathEffects.Normal()])
+
+        plt.title('2D TSNE representation of the image features')
         plt.show()
 
-        # plot the t-SNE image representation
-        # plt.figure(figsize=(9,9))
-        # plt.scatter(tsne_features[:,0], tsne_features[:,1], c=classes)
-        # plt.title("t-SNE image representation")
-        # plt.colorbar()
-        # tick_marks = ['forest', 'opencountry', 'tallbuilding', 'mountain', 'street', 'insidecity', 'coast', 'highway']
-        # plt.xticks(np.arange(8), tick_marks, rotation=45)
-        # plt.yticks(np.arange(8), tick_marks)
-        # plt.tight_layout()
-        # plt.ylabel('True label')
-        # plt.xlabel('Predicted label')
-        # plt.show()
+    # --- UMAP ---
+    elif type == 'umap':
+        # compute the umap image representation
+        embedding = umap.UMAP(n_neighbors=5, min_dist=0.3, metric='correlation').fit_transform(features)
+        labels = np.unique(classes)
 
+        for idx, label in enumerate(labels):
+            label_features = [embedding[i] for i, x in enumerate(classes) if x == label]
+            plt.scatter(
+                [x[0] for x in label_features],
+                [x[1] for x in label_features],
+                c=color_palette[idx],
+                label=f'{idx}-{label}',
+            )
+
+        plt.legend(loc='best')
+
+        for idx, label in enumerate(labels):
+            label_features = [embedding[i] for i, x in enumerate(classes) if x == label]
+            xtext, ytext = np.median(label_features, axis=0)
+            txt = plt.text(xtext, ytext, str(idx))
+            txt.set_path_effects([
+                PathEffects.Stroke(linewidth=5, foreground="w"),
+                PathEffects.Normal()])
+
+        plt.title('2D UMAP representation of the image features')
+        plt.show()
 
 def plot_prec_recall_map_k(type=None, **lists_k):
     for model, values in lists_k.items():

@@ -1,5 +1,6 @@
 # todo: plotear precision - recall curve
 # todo: plotear representacion del espacio (PCA, TSNE, UMAP)
+# todo: plotear mprecision@k, mrecall@k y map@k (solo faltan graficas, lo demas ya esta)
 
 import cv2
 import numpy as np
@@ -12,7 +13,11 @@ import faiss
 from tqdm import tqdm
 from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation, plot_prec_recall_map_k
 import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
+from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation
+
+# To avoid FAIS crashing
+import mkl
+mkl.get_max_threads()
 
 PATH_ROOT = '../../data/MIT_split/train/'
 PATH_TEST = '../../data/MIT_split/test/'
@@ -213,9 +218,11 @@ if __name__=="__main__":
         prec, recall = table_precision_recall(confusion_matrix, show=False)
 
         # todo: plotear precision - recall curve
+        plt.plot(prec, recall)
+        plt.show()
 
         # todo: plotear representacion del espacio (PCA, TSNE, UMAP)
-        #image_representation(features_train, classes_train, type='tsne')
+        image_representation(features_test, classes_test, type='umap')
 
     if plot_prec_and_recall_k:
         map_k, precision_k, recall_k = compute_prec_recall_and_map_for_k()
