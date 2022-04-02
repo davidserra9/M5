@@ -189,7 +189,7 @@ def compute_prec_recall_and_map_for_k():
 
             # Retrieve the images from the test set that are similar to the image in the train set. retrieve_imgs returns
             # the indexes of the retrieved images, and we map them to the corresponding labels
-            retrievals, _ = map_idxs_to_targets(retrieve_imgs(features_train, features_test, k=num_retrievals))
+            _, retrievals = map_idxs_to_targets(retrieve_imgs(features_train, features_test, k=num_retrievals))
             labels_test = generate_labels_test()
 
             # compute the map@k
