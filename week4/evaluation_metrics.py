@@ -1,9 +1,16 @@
+import numpy as np
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 from operator import truediv
 import numpy as np
 import pandas as pd
 from sklearn.manifold import TSNE
+import seaborn as sns
+from sklearn.preprocessing import label_binarize
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.svm import LinearSVC
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import matplotlib.patheffects as PathEffects
 import matplotlib.colors as mcolors
@@ -184,7 +191,11 @@ def image_representation(features, classes, type='tsne'):
         # compute the t-SNE image representation
         tsne = TSNE(n_components=2, random_state=0, learning_rate='auto', init='pca')
         tsne_features = tsne.fit_transform(features)
+        #tsne_features = tsne_features.tolist()
         labels = np.unique(classes)
+
+        # for feature, c in zip(tsne_features, labels):
+        #     plt.scatter(feature[0], feature[1], c=color_map[c])
 
 
         for idx, label in enumerate(labels):
@@ -236,3 +247,24 @@ def image_representation(features, classes, type='tsne'):
 
         plt.title('2D UMAP representation of the image features')
         plt.show()
+
+def plot_prec_recall_map_k(type=None, **lists_k):
+    for model, values in lists_k.items():
+        k = np.arange(1, len(values) + 1)
+        plt.plot(k, values, label=model, linewidth=2, marker='o')
+    if type == 'precision':
+        plt.title('Precision in function of k')
+    if type == 'recall':
+        plt.title('Recall in function of k')
+    if type == 'mapk':
+        plt.title('mapk in function of k')
+    plt.ylim(0, 1)
+    plt.grid(True)
+    plt.xlabel('k')
+    plt.ylabel(type)
+    plt.legend()
+    plt.show()
+
+
+
+

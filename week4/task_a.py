@@ -11,6 +11,8 @@ import os.path
 from os import path
 import faiss
 from tqdm import tqdm
+from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation, plot_prec_recall_map_k
+import matplotlib.pyplot as plt
 from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation
 
 # To avoid FAIS crashing
@@ -206,12 +208,12 @@ if __name__=="__main__":
         print(f'map{num_retrievals}: {mapk_result}')
 
 
-        confusion_matrix = plot_confusion_matrix(labels_test, retrievals, show=True)
-        prec, recall = table_precision_recall(confusion_matrix)
+        confusion_matrix = plot_confusion_matrix(labels_test, retrievals, show=False)
+        prec, recall = table_precision_recall(confusion_matrix, show=False)
 
         # todo: plotear precision - recall curve
-        # plt.plot(recall)
-        # plt.show()
+        plt.plot(prec, recall)
+        plt.show()
 
         # todo: plotear representacion del espacio (PCA, TSNE, UMAP)
         image_representation(features_test, classes_test, type='umap')
@@ -219,13 +221,18 @@ if __name__=="__main__":
     if plot_prec_and_recall_k:
         map_k, precision_k, recall_k = compute_prec_recall_and_map_for_k()
 
-        # plt.plot(recall_k)
-        # plt.show()
+
+        # ejemplo para llamar a mas vectores en una misma linea y que te las plotee
+        # precision_k_prueba = precision_k - 0.1
+        # plot_prec_recall_map_k(type='precision', Siamese=precision_k_prueba, Resnet=precision_k)
+
+        plot_prec_recall_map_k(type='precision', Resnet=precision_k)
+        plot_prec_recall_map_k(type='recall', Resnet=recall_k)
+        plot_prec_recall_map_k(type='mapk', Resnet=map_k)
+
         print(f'map@k: {map_k}')
         print(f'precision@k: {precision_k}')
         print(f'recall@k: {recall_k}')
-
-        # todo: plotear mprecision@k, mrecall@k y map@k (solo faltan graficas, lo demas ya esta)
 
 
 
