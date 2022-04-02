@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 from operator import truediv
 import numpy as np
 import pandas as pd
-
+from sklearn.manifold import TSNE
+import seaborn as sns
 
 def apk(actual, predicted, k):
     """
@@ -130,5 +131,52 @@ def table_precision_recall(cm, show=False):
 
     return prec, rec
 
+def image_representation(features, classes, type='tsne'):
+    """
+    Plot the image representation.
+    Parameters
+    ----------
+    features : list
+               A list of features (order doesn't matter)
+    classes : list
+              A list of classes (order does matter)
+    Returns
+    -------
+    score : double
+            The mean average precision at k over the input lists
+    """
+    color_palette = np.array(sns.color_palette("hls", len(np.unique(classes))))
+    color_map = dict(zip(np.unique(classes), color_palette))
 
+    if type == 'tsne':
+        # compute the t-SNE image representation
+        tsne = TSNE(n_components=2, random_state=0, learning_rate='auto', init='pca')
+        tsne_features = tsne.fit_transform(features)
+        #tsne_features = tsne_features.tolist()
+        labels = np.unique(classes)
+
+        # for feature, c in zip(tsne_features, labels):
+        #     plt.scatter(feature[0], feature[1], c=color_map[c])
+
+
+        for idx, label in enumerate(labels):
+            label_features = [tsne_features[i] for i, x in enumerate(classes) if x == label]
+            for feature in label_features:
+                plt.scatter(features[0],
+                            features[1],
+                            c=np.array(color_palette[idx]))
+        plt.show()
+
+        # plot the t-SNE image representation
+        # plt.figure(figsize=(9,9))
+        # plt.scatter(tsne_features[:,0], tsne_features[:,1], c=classes)
+        # plt.title("t-SNE image representation")
+        # plt.colorbar()
+        # tick_marks = ['forest', 'opencountry', 'tallbuilding', 'mountain', 'street', 'insidecity', 'coast', 'highway']
+        # plt.xticks(np.arange(8), tick_marks, rotation=45)
+        # plt.yticks(np.arange(8), tick_marks)
+        # plt.tight_layout()
+        # plt.ylabel('True label')
+        # plt.xlabel('Predicted label')
+        # plt.show()
 

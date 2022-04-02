@@ -4,12 +4,16 @@
 
 import cv2
 import numpy as np
+import pickle
 import os
 import torch
 import os.path
 from os import path
 import faiss
-from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall
+from tqdm import tqdm
+from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
 
 PATH_ROOT = '../../data/MIT_split/train/'
 PATH_TEST = '../../data/MIT_split/test/'
@@ -24,10 +28,18 @@ def compute_features(model, img_path, train_db):
     :return: the features of the image  (numpy array)
     """
     # if the file features_resnet_train.npy exists, load it
-    if path.exists('features_resnet_train.npy') and train_db:
-        features = np.load('features_resnet_train.npy')
-    elif path.exists('features_resnet_test.npy') and not train_db:
-        features = np.load('features_resnet_test.npy')
+    if path.exists('features_resnet_train.pkl') and train_db:
+        with open('features_resnet_train.pkl', 'rb') as f:
+            features_and_classes = pickle.load(f)
+        features = features_and_classes['features']
+        classes = features_and_classes['classes']
+
+    elif path.exists('features_resnet_test.pkl') and not train_db:
+        with open('features_resnet_test.pkl', 'rb') as f:
+            features_and_classes = pickle.load(f)
+        features = features_and_classes['features']
+        classes = features_and_classes['classes']
+
     else:
         if train_db:
             PATH = PATH_ROOT
@@ -35,13 +47,15 @@ def compute_features(model, img_path, train_db):
             PATH = PATH_TEST
 
         features = []
-        for folder in os.listdir(PATH):
+        classes = []
+        for folder in tqdm(os.listdir(PATH), desc='Computing features'):
             folder_path = os.path.join(PATH, folder)
             for image in os.listdir(folder_path):
                 image_path = os.path.join(folder_path, image)
                 img = cv2.imread(image_path)[:, :, ::-1]
                 img = torch.tensor(img.copy()).permute(2, 0, 1).unsqueeze(0).float()
                 features.append(model(img))
+                classes.append(folder)
 
         # Transform the features from tensor to numpy array
         features = torch.stack(features)
@@ -49,13 +63,16 @@ def compute_features(model, img_path, train_db):
         # drop the dimensions equal to 1
         features = np.squeeze(features)
 
+        features_and_classes = {'features': features, 'classes': classes}
         # Save the features in a file
         if train_db:
-            np.save('features_resnet_train.npy', features)
+            with open('features_resnet_train.pkl', 'wb') as handle:
+                pickle.dump(features_and_classes, handle, protocol=pickle.HIGHEST_PROTOCOL)
         else:
-            np.save('features_resnet_test.npy', features)
+            with open('features_resnet_test.pkl', 'wb') as handle:
+                pickle.dump(features_and_classes, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    return features
+    return features, classes
 
 
 def retrieve_imgs(features_train, features_test, k):
@@ -121,8 +138,8 @@ def compute_prec_recall_and_map_for_k():
         map_k = np.zeros(n_iterations)
 
         # Obtain the features of the images: TRAIN
-        features_train = compute_features(model, img_path=PATH_ROOT, train_db=True)
-        features_test = compute_features(model, img_path=PATH_TEST, train_db=False)
+        features_train, _ = compute_features(model, img_path=PATH_ROOT, train_db=True)
+        features_test, _ = compute_features(model, img_path=PATH_TEST, train_db=False)
 
         for k in range(n_iterations):
             num_retrievals = k + 1
@@ -175,8 +192,8 @@ if __name__=="__main__":
 
     with torch.no_grad():
         # Obtain the features of the images: TRAIN
-        features_train = compute_features(model, img_path=PATH_ROOT, train_db=True)
-        features_test = compute_features(model, img_path=PATH_TEST, train_db=False)
+        features_train, classes_train = compute_features(model, img_path=PATH_ROOT, train_db=True)
+        features_test, classes_test = compute_features(model, img_path=PATH_TEST, train_db=False)
 
         # Retrieve the images from the test set that are similar to the image in the train set. retrieve_imgs returns
         # the indexes of the retrieved images, and we map them to the corresponding labels
@@ -191,7 +208,11 @@ if __name__=="__main__":
         prec, recall = table_precision_recall(confusion_matrix)
 
         # todo: plotear precision - recall curve
+        plt.plot(prec, recall)
+        plt.show()
+
         # todo: plotear representacion del espacio (PCA, TSNE, UMAP)
+        #image_representation(features_train, classes_train, type='tsne')
 
     if plot_prec_and_recall_k:
         map_k, precision_k, reccall_k = compute_prec_recall_and_map_for_k()
