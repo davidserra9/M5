@@ -82,7 +82,8 @@ def retrieve_imgs(features_train, features_test, k):
     :param k: the number of images to retrieve
     :return: the list of the retrieved images
     """
-    # create a faiss index
+    # create a faiss index with the features of the train set:
+    # Exact Search for L2
     index = faiss.IndexFlatL2(features_train.shape[1])
     # add the features of the train set to the index
     index.add(features_train)
@@ -176,18 +177,24 @@ def compute_prec_recall_and_map_for_k():
 
 
 if __name__=="__main__":
+    # PARAMETERS
 
-    # Initialize the model
-    model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
+    # Number of retrievals
+    num_retrievals = 1
+    # true if you want to plot precision and recall and map in function of num_retrievals
+    plot_prec_and_recall_k = True
+    # true if you want to save results when plotting precision and recall and map in function of num_retrievals
+    saveRes = True
+
+    # Initialize the model. delete pickle file of train and test if you want to recompute the features!
+    name_model = 'resnet101'
+
+    model = torch.hub.load('pytorch/vision:v0.10.0', name_model, pretrained=True)
     print(model)
 
     # Remove the last layer
     model = torch.nn.Sequential(*(list(model.children())[:-1]))
     print(model)
-
-    # Number of retrievals
-    num_retrievals = 1
-    plot_prec_and_recall_k = True
 
     with torch.no_grad():
         # Obtain the features of the images: TRAIN
@@ -202,7 +209,6 @@ if __name__=="__main__":
         mapk_result = mapk(labels_test, retrievals, k=num_retrievals)
         print(f'map{num_retrievals}: {mapk_result}')
 
-
         confusion_matrix = plot_confusion_matrix(labels_test, retrievals, show=False)
         prec, recall = table_precision_recall(confusion_matrix, show=False)
 
@@ -214,14 +220,15 @@ if __name__=="__main__":
     if plot_prec_and_recall_k:
         map_k, precision_k, recall_k = compute_prec_recall_and_map_for_k()
 
+        plot_prec_recall_map_k(type='precision', Resnet18=precision_k)
+        plot_prec_recall_map_k(type='recall', Resnet18=recall_k)
+        plot_prec_recall_map_k(type='mapk', Resnet18=map_k)
 
-        # ejemplo para llamar a mas vectores en una misma linea y que te las plotee
-        # precision_k_prueba = precision_k - 0.1
-        # plot_prec_recall_map_k(type='precision', Siamese=precision_k_prueba, Resnet=precision_k)
-
-        plot_prec_recall_map_k(type='precision', Resnet=precision_k)
-        plot_prec_recall_map_k(type='recall', Resnet=recall_k)
-        plot_prec_recall_map_k(type='mapk', Resnet=map_k)
+        # save map_k and precision_k and recall_k in a file
+        if saveRes:
+            np.save(f'variables/map_k_{name_model}', map_k)
+            np.save(f'variables/precision_k_{name_model}', precision_k)
+            np.save(f'variables/recall_k_{name_model}', recall_k)
 
         print(f'map@k: {map_k}')
         print(f'precision@k: {precision_k}')
