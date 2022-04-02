@@ -197,6 +197,7 @@ def plot_prec_recall_map_k(type=None, **lists_k):
     if type == 'mapk':
         plt.title('mapk in function of k')
     plt.ylim(0, 1)
+    plt.grid(True)
     plt.xlabel('k')
     plt.ylabel(type)
     plt.legend()
