@@ -6,6 +6,11 @@ import numpy as np
 import pandas as pd
 from sklearn.manifold import TSNE
 import seaborn as sns
+from sklearn.preprocessing import label_binarize
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.svm import LinearSVC
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 def apk(actual, predicted, k):
     """
@@ -179,4 +184,24 @@ def image_representation(features, classes, type='tsne'):
         # plt.ylabel('True label')
         # plt.xlabel('Predicted label')
         # plt.show()
+
+
+def plot_prec_recall_map_k(type=None, **lists_k):
+    for model, values in lists_k.items():
+        k = np.arange(1, len(values) + 1)
+        plt.plot(k, values, label=model, linewidth=2, marker='o')
+    if type == 'precision':
+        plt.title('Precision in function of k')
+    if type == 'recall':
+        plt.title('Recall in function of k')
+    if type == 'mapk':
+        plt.title('mapk in function of k')
+    plt.ylim(0, 1)
+    plt.xlabel('k')
+    plt.ylabel(type)
+    plt.legend()
+    plt.show()
+
+
+
 
