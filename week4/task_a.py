@@ -18,7 +18,7 @@ PATH_ROOT = '../../data/MIT_split/train/'
 PATH_TEST = '../../data/MIT_split/test/'
 
 
-def compute_features(model, img_path, train_db):
+def compute_features(model, train_db):
     """
     Compute the features of an image. The features are computed using the model.
     :param model: the model to use  (e.g. resnet50)
