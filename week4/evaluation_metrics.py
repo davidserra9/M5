@@ -17,6 +17,7 @@ import matplotlib.colors as mcolors
 import umap
 import cv2
 
+
 def apk(actual, predicted, k):
     """
     Computes the average precision at k.
@@ -35,16 +36,16 @@ def apk(actual, predicted, k):
     score : double
             The average precision at k over the input lists
     """
-    if len(predicted)>k:
+    if len(predicted) > k:
         predicted = predicted[:k]
 
     score = 0.0
     num_hits = 0.0
 
-    for i,p in enumerate(predicted):
+    for i, p in enumerate(predicted):
         if p in actual and p not in predicted[:i]:
             num_hits += 1.0
-            score += num_hits / (i+1.0)
+            score += num_hits / (i + 1.0)
 
     if not actual:
         return 0.0
@@ -72,7 +73,7 @@ def mapk(actual, predicted, k):
     score : double
             The mean average precision at k over the input lists
     """
-    return np.mean([apk(a,p,k) for a,p in zip(actual, predicted)])
+    return np.mean([apk(a, p, k) for a, p in zip(actual, predicted)])
 
 
 def plot_confusion_matrix(ground_truth, predicted, show=False):
@@ -97,7 +98,7 @@ def plot_confusion_matrix(ground_truth, predicted, show=False):
     cm = confusion_matrix(ground_truth, predicted)
 
     if show:
-        plt.figure(figsize=(9,9))
+        plt.figure(figsize=(9, 9))
         plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
         plt.title("Confusion matrix")
         plt.colorbar()
@@ -113,7 +114,6 @@ def plot_confusion_matrix(ground_truth, predicted, show=False):
 
 
 def table_precision_recall(cm, show=False):
-
     # compute the precision-recall curve
     tp = np.diag(cm)
     prec = list(map(truediv, tp, np.sum(cm, axis=0)))
@@ -126,7 +126,8 @@ def table_precision_recall(cm, show=False):
         fig, ax = plt.subplots(1, 1)
         data = [prec,
                 rec]
-        column_labels = ['forest', 'opencountry', 'tallbuilding', 'mountain', 'street', 'insidecity', 'coast', 'highway']
+        column_labels = ['forest', 'opencountry', 'tallbuilding', 'mountain', 'street', 'insidecity', 'coast',
+                         'highway']
         df = pd.DataFrame(data, columns=column_labels)
         ax.axis('tight')
         ax.axis('off')
@@ -140,6 +141,7 @@ def table_precision_recall(cm, show=False):
         plt.show()
 
     return prec, rec
+
 
 def image_representation(features, classes, type='tsne'):
     """
@@ -192,12 +194,11 @@ def image_representation(features, classes, type='tsne'):
         # compute the t-SNE image representation
         tsne = TSNE(n_components=2, random_state=0, learning_rate='auto', init='pca')
         tsne_features = tsne.fit_transform(features)
-        #tsne_features = tsne_features.tolist()
+        # tsne_features = tsne_features.tolist()
         labels = np.unique(classes)
 
         # for feature, c in zip(tsne_features, labels):
         #     plt.scatter(feature[0], feature[1], c=color_map[c])
-
 
         for idx, label in enumerate(labels):
             label_features = [tsne_features[i] for i, x in enumerate(classes) if x == label]
@@ -249,22 +250,24 @@ def image_representation(features, classes, type='tsne'):
         plt.title('2D UMAP representation of the image features')
         plt.show()
 
+
 def plot_prec_recall_map_k(type=None, **lists_k):
     for model, values in lists_k.items():
         k = np.arange(1, len(values) + 1)
         plt.plot(k, values, label=model, linewidth=2, marker='o')
     if type == 'precision':
-        plt.title('Precision in function of k')
+        plt.title('Precision@k')
     if type == 'recall':
-        plt.title('Recall in function of k')
+        plt.title('Recall@k')
     if type == 'mapk':
-        plt.title('mapk in function of k')
+        plt.title('mapk@k')
     plt.ylim(0, 1)
     plt.grid(True)
     plt.xlabel('k')
     plt.ylabel(type)
     plt.legend()
     plt.show()
+
 
 def plot_image_retrievals(queries, retrivals, k=5):
     random_queries = np.random.randint(len(queries), size=k)
@@ -273,18 +276,13 @@ def plot_image_retrievals(queries, retrivals, k=5):
     for i, query_num in enumerate(random_queries):
         query_path = queries[query_num]
         retrieval_paths = retrivals[query_num]
-        query_image = cv2.imread(query_path)[:,:,::-1]
+        query_image = cv2.imread(query_path)[:, :, ::-1]
         ax[i, 0].imshow(query_image)
         ax[i, 0].set_title(query_path.split('/')[-2])
         ax[i, 0].axis('off')
         for j, retrieval_path in enumerate(retrieval_paths):
-            retrieval_image = cv2.imread(retrieval_path)[:,:,::-1]
+            retrieval_image = cv2.imread(retrieval_path)[:, :, ::-1]
             ax[i, j + 1].imshow(retrieval_image)
             ax[i, j + 1].set_title(retrieval_path.split('/')[-2])
             ax[i, j + 1].axis('off')
     plt.show()
-
-
-
-
-

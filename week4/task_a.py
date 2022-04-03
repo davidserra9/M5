@@ -11,19 +11,25 @@ import os.path
 from os import path
 import faiss
 from tqdm import tqdm
-from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation, plot_prec_recall_map_k
+from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation, \
+    plot_prec_recall_map_k
 import matplotlib.pyplot as plt
-from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation, plot_image_retrievals
+from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation, \
+    plot_image_retrievals
+from PIL import Image
+import torchvision.transforms as transforms
 
-# To avoid FAIS crashing
-import mkl
-mkl.get_max_threads()
+# To avoid FAIS crashing (Descomentar los de linux y comentar los de windows)
+# import mkl
+# mkl.get_max_threads()
 
-PATH_ROOT = '../../data/MIT_split/train/'
-PATH_TEST = '../../data/MIT_split/test/'
+PATH_ROOT = '../../data/MIT_split/'
+PATH_TRAIN = PATH_ROOT + 'train/'
+PATH_TEST = PATH_ROOT + 'test/'
+PATH_FEATURES = 'features/'
 
 
-def compute_features(model, img_path, train_db):
+def compute_features(model_id, model, img_path, train_db):
     """
     Compute the features of an image. The features are computed using the model.
     :param model: the model to use  (e.g. resnet50)
@@ -32,33 +38,46 @@ def compute_features(model, img_path, train_db):
     :return: the features of the image  (numpy array)
     """
     # if the file features_resnet_train.npy exists, load it
-    if path.exists('features_resnet_train.pkl') and train_db:
-        with open('features_resnet_train.pkl', 'rb') as f:
+    if path.exists(PATH_FEATURES + model_id + '_train.pkl') and train_db:
+        with open(PATH_FEATURES + model_id + '_train.pkl', 'rb') as f:
             features_and_classes = pickle.load(f)
         features = features_and_classes['features']
         classes = features_and_classes['classes']
 
-    elif path.exists('features_resnet_test.pkl') and not train_db:
-        with open('features_resnet_test.pkl', 'rb') as f:
+    elif path.exists(PATH_FEATURES + model_id + '_test.pkl') and not train_db:
+        with open(PATH_FEATURES + model_id + '_test.pkl', 'rb') as f:
             features_and_classes = pickle.load(f)
         features = features_and_classes['features']
         classes = features_and_classes['classes']
 
     else:
         if train_db:
-            PATH = PATH_ROOT
+            PATH = PATH_TRAIN
         else:
             PATH = PATH_TEST
-
+        transform = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225]),
+            ]
+        )
         features = []
         classes = []
         for folder in tqdm(os.listdir(PATH), desc='Computing features'):
             folder_path = os.path.join(PATH, folder)
             for image in os.listdir(folder_path):
                 image_path = os.path.join(folder_path, image)
-                img = cv2.imread(image_path)[:, :, ::-1]
-                img = torch.tensor(img.copy()).permute(2, 0, 1).unsqueeze(0).float()
-                features.append(model(img))
+                if "base" in model_id:  # case we use just the base model
+                    img = cv2.imread(image_path)[:, :, ::-1]
+                    img = torch.tensor(img.copy()).permute(2, 0, 1).unsqueeze(0).float()
+                    features.append(model(img))
+                else:  # case we use siamese or triplet finetuning
+                    img = Image.open(image_path)
+                    im = transform(img.copy())
+                    features.append(model.get_embedding(im.unsqueeze(0)))  # we unsqueeze the image to get a batch of
+                    # 1 image
                 classes.append(folder)
 
         # Transform the features from tensor to numpy array
@@ -70,10 +89,10 @@ def compute_features(model, img_path, train_db):
         features_and_classes = {'features': features, 'classes': classes}
         # Save the features in a file
         if train_db:
-            with open('features_resnet_train.pkl', 'wb') as handle:
+            with open(PATH_FEATURES + model_id + '_train.pkl', 'wb') as handle:
                 pickle.dump(features_and_classes, handle, protocol=pickle.HIGHEST_PROTOCOL)
         else:
-            with open('features_resnet_test.pkl', 'wb') as handle:
+            with open(PATH_FEATURES + model_id + '_test.pkl', 'wb') as handle:
                 pickle.dump(features_and_classes, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return features, classes
@@ -106,8 +125,8 @@ def map_idxs_to_targets(retrievals):
     """
     count = 0
     retrievals_idx = retrievals.copy()
-    for idx_folder, folder in enumerate(os.listdir(PATH_ROOT)):
-        folder_path = os.path.join(PATH_ROOT, folder)
+    for idx_folder, folder in enumerate(os.listdir(PATH_TRAIN)):
+        folder_path = os.path.join(PATH_TRAIN, folder)
         # count the elements inside the folder
         for counter_retrievals_class, retrieval in enumerate(retrievals):
             for idx_retrieval, index_of_img_retrieved in enumerate(retrieval):
@@ -116,6 +135,7 @@ def map_idxs_to_targets(retrievals):
         count += len(os.listdir(folder_path))
 
     return retrievals, retrievals_idx
+
 
 def map_all_query_paths(test_path):
     """
@@ -145,10 +165,11 @@ def map_idxs_to_paths(img_idxs):
         img_path_retrievals = []
         for retrieval_idx in retrievals:
             count = 0
-            for idx_folder, folder in enumerate(os.listdir(PATH_ROOT)):
-                folder_path = os.path.join(PATH_ROOT, folder)
+            for idx_folder, folder in enumerate(os.listdir(PATH_TRAIN)):
+                folder_path = os.path.join(PATH_TRAIN, folder)
                 if (count <= retrieval_idx) and (retrieval_idx < count + len(os.listdir(folder_path))):
-                    img_path_retrievals.append(os.path.join(folder_path, os.listdir(folder_path)[retrieval_idx - count]))
+                    img_path_retrievals.append(
+                        os.path.join(folder_path, os.listdir(folder_path)[retrieval_idx - count]))
                     break
                 count += len(os.listdir(folder_path))
         paths.append(img_path_retrievals)
@@ -161,14 +182,14 @@ def generate_labels_test():
     :return: the labels of the test set (numpy array)
     """
     labels = []
-    for idx_folder, folder in enumerate(os.listdir(PATH_ROOT)):
+    for idx_folder, folder in enumerate(os.listdir(PATH_TRAIN)):
         folder_path = os.path.join(PATH_TEST, folder)
         # generate array of size count of idx_folder number of times
         labels.extend([[idx_folder]] * len(os.listdir(folder_path)))
     return labels
 
 
-def compute_prec_recall_and_map_for_k():
+def compute_prec_recall_and_map_for_k(model_id, PATH, model):
     """
     Compute the precision, recall and MAP for k.
     :return: the precision, recall and MAP for k
@@ -181,8 +202,8 @@ def compute_prec_recall_and_map_for_k():
         map_k = np.zeros(n_iterations)
 
         # Obtain the features of the images: TRAIN
-        features_train, _ = compute_features(model, img_path=PATH_ROOT, train_db=True)
-        features_test, _ = compute_features(model, img_path=PATH_TEST, train_db=False)
+        features_train, _ = compute_features(model_id, model,  img_path=PATH + '/train', train_db=True)
+        features_test, _ = compute_features(model_id, model, img_path=PATH + '/train', train_db=False)
 
         for k in range(n_iterations):
             num_retrievals = k + 1
@@ -219,7 +240,16 @@ def compute_prec_recall_and_map_for_k():
         return map_k, precision_k, reccall_k
 
 
-if __name__=="__main__":
+# Available backbone models
+backbones = {
+    '0': 'resnet18',
+    '1': 'resnet34',
+    '2': 'resnet50',
+    '3': 'resnet101',
+    '4': 'customCNN',
+}
+
+if __name__ == "__main__":
     # PARAMETERS
 
     # Number of retrievals
@@ -230,19 +260,19 @@ if __name__=="__main__":
     saveRes = True
 
     # Initialize the model. delete pickle file of train and test if you want to recompute the features!
-    name_model = 'resnet50'
+    baseline = 'resnet50'
+    method = 'base'
+    model_id = baseline + '_' + method
 
-    model = torch.hub.load('pytorch/vision:v0.10.0', name_model, pretrained=True)
-    print(model)
-
+    model = torch.hub.load('pytorch/vision:v0.10.0', baseline, pretrained=True)
     # Remove the last layer
     model = torch.nn.Sequential(*(list(model.children())[:-1]))
     print(model)
 
     with torch.no_grad():
         # Obtain the features of the images: TRAIN
-        features_train, classes_train = compute_features(model, img_path=PATH_ROOT, train_db=True)
-        features_test, classes_test = compute_features(model, img_path=PATH_TEST, train_db=False)
+        features_train, classes_train = compute_features(model_id, model, img_path=PATH_TRAIN, train_db=True)
+        features_test, classes_test = compute_features(model_id, model, img_path=PATH_TEST, train_db=False)
 
         # Retrieve the images from the test set that are similar to the image in the train set. retrieve_imgs returns
         # the indexes of the retrieved images, and we map them to the corresponding labels
@@ -267,7 +297,7 @@ if __name__=="__main__":
         image_representation(features_test, classes_test, type='umap')
 
     if plot_prec_and_recall_k:
-        map_k, precision_k, recall_k = compute_prec_recall_and_map_for_k()
+        map_k, precision_k, recall_k = compute_prec_recall_and_map_for_k(model_id, PATH_ROOT, model)
 
         plot_prec_recall_map_k(type='precision', Resnet18=precision_k)
         plot_prec_recall_map_k(type='recall', Resnet18=recall_k)
@@ -275,15 +305,10 @@ if __name__=="__main__":
 
         # save map_k and precision_k and recall_k in a file
         if saveRes:
-            np.save(f'variables/map_k_{name_model}', map_k)
-            np.save(f'variables/precision_k_{name_model}', precision_k)
-            np.save(f'variables/recall_k_{name_model}', recall_k)
+            np.save(f'variables/map_k_{model_id}', map_k)
+            np.save(f'variables/precision_k_{model_id}', precision_k)
+            np.save(f'variables/recall_k_{model_id}', recall_k)
 
         print(f'map@k: {map_k}')
         print(f'precision@k: {precision_k}')
         print(f'recall@k: {recall_k}')
-
-
-
-
-
