@@ -79,8 +79,8 @@ def main():
     siamese_train_loader = torch.utils.data.DataLoader(train_dataset_siamese, batch_size=batch_size, shuffle=True)
     siamese_test_loader = torch.utils.data.DataLoader(test_dataset_siamese, batch_size=batch_size, shuffle=False)
     margin = 1.
-    embedding_net = EmbeddingNet()
-    model = SiameseNet(embedding_net, backbone)
+    embedding_net = EmbeddingNet(backbone)
+    model = SiameseNet(embedding_net)
 
     # Check if file exists
     if path.exists(OUTPUT_MODEL_DIR + model_id + '.pth'):

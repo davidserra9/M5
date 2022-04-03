@@ -17,6 +17,7 @@ class SiameseMIT_split(Dataset):
             self.labels_set = set(self.train_labels)
             self.label_to_indices = {label: np.where(np.asarray(self.train_labels) == label)[0]
                                      for label in self.labels_set}
+            print(self.label_to_indices)
         else:
             # generate fixed pairs for testing
             self.test_labels = self.dataset.targets
@@ -131,4 +132,4 @@ class TripletMIT_split(Dataset):
         return (img1, img2, img3), []
 
     def __len__(self):
-        return self.n_samples  # //100 # if you want to subsample for speed
+        return self.n_samples #//100 # if you want to subsample for speed

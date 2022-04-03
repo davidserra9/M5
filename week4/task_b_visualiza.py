@@ -30,7 +30,7 @@ if __name__ == "__main__":
         os.makedirs(PATH_FEATURES)
 
     # Initialize the model
-    embedding_net = EmbeddingNet()
+    embedding_net = EmbeddingNet(backbone)
     model = SiameseNet(embedding_net)
 
     model.load_state_dict(torch.load(PATH_MODEL + model_id + '.pth'))
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
         # todo: plotear precision - recall curve
 
-        image_representation(features_train, classes_train, type='pca')
+        image_representation(features_train, classes_train, type='umap')
 
     if plot_prec_and_recall_k:
         map_k, precision_k, recall_k = compute_prec_recall_and_map_for_k(model_id, PATH_ROOT, model)

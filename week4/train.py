@@ -2,7 +2,9 @@ import torch
 import numpy as np
 import wandb
 
-def fit(train_loader, val_loader, model, loss_fn, optimizer, scheduler, n_epochs, cuda, log_interval, model_id, metrics=[],
+
+def fit(train_loader, val_loader, model, loss_fn, optimizer, scheduler, n_epochs, cuda, log_interval, model_id,
+        metrics=[],
         start_epoch=0):
     """
     Loaders, model, loss function and metrics should work together for a given task,
@@ -36,7 +38,7 @@ def fit(train_loader, val_loader, model, loss_fn, optimizer, scheduler, n_epochs
 
         wandb.log({"train_loss": train_loss, "val_loss": val_loss})
 
-        PATH = 'models/'+model_id+'.pth'
+        PATH = 'models/' + model_id + '.pth'
         torch.save(model.state_dict(), PATH)
         print(message)
 
@@ -57,7 +59,6 @@ def train_epoch(train_loader, model, loss_fn, optimizer, cuda, log_interval, met
             data = tuple(d.cuda() for d in data)
             if target is not None:
                 target = target.cuda()
-
 
         optimizer.zero_grad()
         outputs = model(*data)
