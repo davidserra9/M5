@@ -73,7 +73,7 @@ def main():
     train_dataset_triplet = TripletMIT_split(train_dataset, split='train', transform=transform)
     test_dataset_triplet = TripletMIT_split(test_dataset, split='test', transform=transform)
 
-    batch_size = 32
+    batch_size = 16
     # kwargs = {'num_workers': 1, 'pin_memory': True} if cuda else {}
     triplet_train_loader = torch.utils.data.DataLoader(train_dataset_triplet, batch_size=batch_size, shuffle=True)
     triplet_test_loader = torch.utils.data.DataLoader(test_dataset_triplet, batch_size=batch_size, shuffle=False)

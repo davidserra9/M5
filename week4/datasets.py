@@ -107,7 +107,7 @@ class TripletMIT_split(Dataset):
 
     def __getitem__(self, index):
         if self.train:
-            img1, label1 = self.train_data[index], self.train_labels[index].item()
+            img1, label1 = self.train_data[index], self.train_labels[index]
             positive_index = index
             while positive_index == index:
                 positive_index = np.random.choice(self.label_to_indices[label1])
@@ -131,4 +131,4 @@ class TripletMIT_split(Dataset):
         return (img1, img2, img3), []
 
     def __len__(self):
-        return self.n_samples #//100 # if you want to subsample for speed
+        return self.n_samples # if you want to subsample for speed
