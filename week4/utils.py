@@ -12,7 +12,8 @@ from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_reca
 import matplotlib.pyplot as plt
 from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation, \
     plot_image_retrievals
-
+from PIL import Image
+import torchvision.transforms as transforms
 
 def map_all_query_paths(test_path):
     """
@@ -53,36 +54,85 @@ def map_idxs_to_paths(img_idxs, PATH):
     return paths
 
 
-mnist_classes = ['0', '1', '2', '3', '4', '5', '6', '7']
-colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
-          '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
-          ]
-cuda = torch.cuda.is_available()
 
 
-def plot_embeddings(embeddings, targets, xlim=None, ylim=None):
-    plt.figure(figsize=(10, 10))
-    for i in range(10):
-        inds = np.where(targets == i)[0]
-        plt.scatter(embeddings[inds, 0], embeddings[inds, 1], alpha=0.5, color=colors[i])
-    if xlim:
-        plt.xlim(xlim[0], xlim[1])
-    if ylim:
-        plt.ylim(ylim[0], ylim[1])
-    plt.legend(mnist_classes)
-    plt.show()
+PATH_ROOT = '../../data/MIT_split/'
+PATH_TRAIN = PATH_ROOT + 'train/'
+PATH_TEST = PATH_ROOT + 'test/'
+PATH_FEATURES = 'features/'
 
-def extract_embeddings(dataloader, model):
-    model.to('cuda')
-    with torch.no_grad():
-        model.eval()
-        embeddings = np.zeros((len(dataloader.dataset), 2))
-        labels = np.zeros(len(dataloader.dataset))
-        k = 0
-        for images, target in dataloader:
-            if cuda:
-                images = images.cuda()
-            embeddings[k:k + len(images)] = model.get_embedding(images).data.cpu().numpy()
-            labels[k:k + len(images)] = target.numpy()
-            k += len(images)
-    return embeddings, labels
+def compute_features(model_id, model, dataloader, train_db):
+    """
+    Compute the features of an image. The features are computed using the model.
+    :param model: the model to use  (e.g. resnet50)
+    :param img_path: the path to the image  (e.g. '../../data/MIT_split/train/0/0_0.jpg')
+    :param train_db: the database of the training set. It is used to compute the features of the test or train images.
+    :return: the features of the image  (numpy array)
+    """
+    print(model_id)
+    # if the file features_resnet_train.npy exists, load it
+    if path.exists(PATH_FEATURES + model_id + '_train.pkl') and train_db:
+        with open(PATH_FEATURES + model_id + '_train.pkl', 'rb') as f:
+            features_and_classes = pickle.load(f)
+        features = features_and_classes['features']
+        classes = features_and_classes['classes']
+
+    elif path.exists(PATH_FEATURES + model_id + '_test.pkl') and not train_db:
+        with open(PATH_FEATURES + model_id + '_test.pkl', 'rb') as f:
+            features_and_classes = pickle.load(f)
+        features = features_and_classes['features']
+        classes = features_and_classes['classes']
+
+    else:
+        if train_db:
+            PATH = PATH_TRAIN
+        else:
+            PATH = PATH_TEST
+
+        model.to('cuda')
+        with torch.no_grad():
+            model.eval()
+            embeddings = np.zeros((len(dataloader.dataset), 2048))
+            labels = np.zeros(len(dataloader.dataset))
+            k = 0
+            for images, target in dataloader:
+                if cuda:
+                    images = images.cuda()
+                embeddings[k:k + len(images)] = model.get_embedding(images).data.cpu().numpy()
+                labels[k:k + len(images)] = target.numpy()
+                k += len(images)
+        print(embeddings)
+
+        # features = []
+        # classes = []
+        # for folder in tqdm(os.listdir(PATH), desc='Computing features'):
+        #     folder_path = os.path.join(PATH, folder)
+        #     for image in os.listdir(folder_path):
+        #         image_path = os.path.join(folder_path, image)
+        #         if "base" in model_id:  # case we use just the base model
+        #             img = cv2.imread(image_path)[:, :, ::-1]
+        #             img = torch.tensor(img.copy()).permute(2, 0, 1).unsqueeze(0).float()
+        #             features.append(model(img))
+        #         else:  # case we use siamese or triplet finetuning
+        #             img = Image.open(image_path)
+        #             im = transform(img.copy())
+        #             features.append(model.get_embedding(im.unsqueeze(0)))  # we unsqueeze the image to get a batch of
+        #             # 1 image
+        #         classes.append(folder)
+
+        # Transform the features from tensor to numpy array
+        features = torch.stack(features)
+        features = features.numpy()
+        # drop the dimensions equal to 1
+        features = np.squeeze(features)
+
+        features_and_classes = {'features': features, 'classes': classes}
+        # Save the features in a file
+        if train_db:
+            with open(PATH_FEATURES + model_id + '_train.pkl', 'wb') as handle:
+                pickle.dump(features_and_classes, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        else:
+            with open(PATH_FEATURES + model_id + '_test.pkl', 'wb') as handle:
+                pickle.dump(features_and_classes, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    return features, classes

@@ -68,7 +68,8 @@ def main():
     # Method selection
     backbone = backbones['2']
     method = 'siamese'
-    model_id = backbone + '_' + method
+    info = 'fc'
+    model_id = backbone + '_' + method + '_' + info
 
     train_dataset = ImageFolder(TRAIN_IMG_DIR)  # Create the train dataset
     test_dataset = ImageFolder(TEST_IMG_DIR)  # Create the test dataset

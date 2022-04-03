@@ -37,6 +37,7 @@ def compute_features(model_id, model, img_path, train_db):
     :param train_db: the database of the training set. It is used to compute the features of the test or train images.
     :return: the features of the image  (numpy array)
     """
+    print(model_id)
     # if the file features_resnet_train.npy exists, load it
     if path.exists(PATH_FEATURES + model_id + '_train.pkl') and train_db:
         with open(PATH_FEATURES + model_id + '_train.pkl', 'rb') as f:

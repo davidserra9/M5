@@ -45,9 +45,9 @@ class NetSquared(nn.Module):
         x = self.dropout2(x)
 
         x = self.globAvgPool(x)
-        x = self.dropout1(x)
+        # x = self.dropout1(x)
         x = torch.squeeze(x)
-        x = self.linear(x)
+        # x = self.linear(x)
 
         return x
 
@@ -57,10 +57,20 @@ class EmbeddingNet(nn.Module):
         super(EmbeddingNet, self).__init__()
 
         basemodel = torch.hub.load('pytorch/vision:v0.10.0', backbone, pretrained=True)
+
+
         self.base_resnet = torch.nn.Sequential(*(list(basemodel.children())[:-1]))
+
+        self.fc = nn.Sequential(nn.Linear(2048, 256),
+                                nn.PReLU(),
+                                nn.Linear(256, 256),
+                                nn.PReLU(),
+                                nn.Linear(256, 2)
+                                )
 
     def forward(self, x):
         output = self.base_resnet(x).squeeze()
+        output = self.fc(output)
         return output
 
     def get_embedding(self, x):

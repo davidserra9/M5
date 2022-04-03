@@ -4,21 +4,32 @@ from os import path
 
 import numpy as np
 import torch
+from torchvision.datasets import ImageFolder
 
 from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall, image_representation, \
     plot_prec_recall_map_k, plot_image_retrievals
-from task_a import compute_features, retrieve_imgs, map_idxs_to_targets, compute_prec_recall_and_map_for_k, \
-    generate_labels_test
-from week4.model import EmbeddingNet, SiameseNet
-from week4.utils import map_all_query_paths, map_idxs_to_paths
+from task_a import retrieve_imgs, map_idxs_to_targets, compute_prec_recall_and_map_for_k, \
+    generate_labels_test, compute_features
+from model import EmbeddingNet, SiameseNet
+from utils import map_all_query_paths, map_idxs_to_paths
+from datasets import SiameseMIT_split
+import torchvision.transforms as transforms
 
 PATH_ROOT = '../../data/MIT_split/'
 PATH_TRAIN = PATH_ROOT + 'train/'
 PATH_TEST = PATH_ROOT + 'test/'
+# Available backbone models
+backbones = {
+    '0': 'resnet18',
+    '1': 'resnet34',
+    '2': 'resnet50',
+    '3': 'resnet101',
+    '4': 'customCNN',
+}
 
 if __name__ == "__main__":
     # Method selection
-    backbone = 'resnet50'
+    backbone = backbones['2']
     method = 'siamese'
     model_id = backbone + '_' + method
 
@@ -28,6 +39,35 @@ if __name__ == "__main__":
     # create directory for features if not exists
     if not path.exists(PATH_FEATURES):
         os.makedirs(PATH_FEATURES)
+
+    # Load datasets
+    ROOT_PATH = "../../data/"
+    TRAIN_IMG_DIR = ROOT_PATH + "MIT_split/train/"
+    TEST_IMG_DIR = ROOT_PATH + "MIT_split/test/"
+
+    # Method selection
+    backbone = backbones['2']
+    method = 'siamese'
+    model_id = backbone + '_' + method
+
+    train_dataset = ImageFolder(TRAIN_IMG_DIR)  # Create the train dataset
+    test_dataset = ImageFolder(TEST_IMG_DIR)  # Create the test dataset
+    transform = transforms.Compose(
+        [
+            # RandomHorizontalFlip(),
+            # RandomRotation(15),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]),
+        ]
+    )
+    train_dataset_siamese = SiameseMIT_split(train_dataset, split='train', transform=transform)
+    test_dataset_siamese = SiameseMIT_split(test_dataset, split='test', transform=transform)
+
+    batch_size = 32
+    siamese_train_loader = torch.utils.data.DataLoader(train_dataset_siamese, batch_size=batch_size, shuffle=True)
+    siamese_test_loader = torch.utils.data.DataLoader(test_dataset_siamese, batch_size=batch_size, shuffle=False)
 
     # Initialize the model
     embedding_net = EmbeddingNet(backbone)
@@ -44,12 +84,12 @@ if __name__ == "__main__":
     plot_prec_and_recall_k = True
     # true if you want to save results when plotting precision and recall and map in function of num_retrievals
     saveRes = True
-    plot_qualitative = True
+    plot_qualitative = False
 
     with torch.no_grad():
         # Obtain the features of the images: TRAIN
-        features_train, classes_train = compute_features(model_id, model, PATH_FEATURES, train_db=True)
-        features_test, classes_test = compute_features(model_id, model, PATH_FEATURES, train_db=False)
+        features_train, classes_train = compute_features(model_id, model, siamese_train_loader, train_db=True)
+        features_test, classes_test = compute_features(model_id, model, siamese_test_loader, train_db=False)
 
         # Retrieve the images from the test set that are similar to the image in the train set. retrieve_imgs
         # returns the indexes of the retrieved images, and we map them to the corresponding labels
