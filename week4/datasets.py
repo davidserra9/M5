@@ -17,7 +17,6 @@ class SiameseMIT_split(Dataset):
             self.labels_set = set(self.train_labels)
             self.label_to_indices = {label: np.where(np.asarray(self.train_labels) == label)[0]
                                      for label in self.labels_set}
-            print(self.label_to_indices)
         else:
             # generate fixed pairs for testing
             self.test_labels = self.dataset.targets

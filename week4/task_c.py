@@ -50,8 +50,8 @@ def main():
     # Transform the output of the Dataset object into Tensor
     transform = transforms.Compose(
         [
-            RandomHorizontalFlip(),
-            RandomRotation(15),
+            # RandomHorizontalFlip(),
+            # RandomRotation(15),
             transforms.ToTensor(),
             transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],
@@ -94,7 +94,7 @@ def main():
     lr = 1e-3
     optimizer = optim.Adam(model.parameters(), lr=lr)
     scheduler = lr_scheduler.StepLR(optimizer, 8, gamma=0.1, last_epoch=-1)
-    n_epochs = 20
+    n_epochs = 50
     log_interval = 10
 
     fit(triplet_train_loader, triplet_test_loader, model, loss_fn, optimizer, scheduler, n_epochs, cuda, log_interval,

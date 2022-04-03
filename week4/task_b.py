@@ -18,6 +18,7 @@ from train import fit
 from week4.losses import ContrastiveLoss
 from week4.model import EmbeddingNet, SiameseNet
 import wandb
+
 wandb.init(project="M5-week4", entity="celulaeucariota")
 
 # Available backbone models
@@ -28,6 +29,7 @@ backbones = {
     '3': 'resnet101',
     '4': 'customCNN',
 }
+
 
 def main():
     # cuda management
@@ -51,8 +53,8 @@ def main():
     # Transform the output of the Dataset object into Tensor
     transform = transforms.Compose(
         [
-            RandomHorizontalFlip(),
-            RandomRotation(15),
+            # RandomHorizontalFlip(),
+            # RandomRotation(15),
             transforms.ToTensor(),
             transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],
@@ -94,11 +96,11 @@ def main():
     lr = 0.001
     optimizer = optim.Adam(model.parameters(), lr=lr)
     scheduler = lr_scheduler.StepLR(optimizer, 8, gamma=0.1, last_epoch=-1)
-    n_epochs = 20
+    n_epochs = 50
     log_interval = 10
 
     wandb.config = {
-        "learning_rate":lr,
+        "learning_rate": lr,
         "epochs": n_epochs,
         "batch_size": batch_size
     }
