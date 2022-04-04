@@ -111,9 +111,9 @@ def retrieve_imgs(features_train, features_test, k):
     # Exact Search for L2
     index = faiss.IndexFlatL2(features_train.shape[1])
     # add the features of the train set to the index
-    index.add(features_train)
+    index.add(features_train.astype(np.float32))
     # retrieve the features of the test set
-    D, I = index.search(features_test, k)
+    D, I = index.search(features_test.astype(np.float32), k)
     # return the retrieved images
     return I
 
@@ -153,7 +153,7 @@ def map_all_query_paths(test_path):
     return test_paths
 
 
-def map_idxs_to_paths(img_idxs):
+def map_idxs_to_paths(img_idxs, PATH_TRAIN):
     """
     Convert the retrieved images indexes to the corresponding paths.
     :param img_idxs: the list of retrieved images indexes

@@ -47,6 +47,34 @@ $ python week3/task_{id_task}.py
 The CVPR paper corresponding to all the tasks and experiments devoted to Object Detection and Instance Segmentation can be seen in: [Paper](https://www.overleaf.com/read/hcbxsbkrsmcb)
 **NOTE: The new version of the paper contains further improvements to week 2 results. We apply new splits to obtain more balanced annotations, revaluate pre-trained models with COCO and perform fine-tuning with KITTI-MOTS.
 
+## Week4
+This weeks tasks where devoted to explore the problem of metric learning in the context of Image Retrieval. We have used the MIT-Scene dataset, composed 
+of images of 8 different types of places, to train a model that can be used to retrieve images of the same type.
+
+We have explored many Resnet backbones as well as the CNN built in the project for week 1, we have tested how good was the retrieval of the images using pretrained weights on Imagenet and fine-tuning the models with MIT-Scene.
+Furthermode, we have used Siamese and Triplet learning strategies to implicitly learn a set of features that are good for differentiating between similar and dissimilar images.
+
+
+![PlaneAsBird](/week4/clusters.PNG)
+
+Slides for week 4: [Slides](https://www.overleaf.com/read/sfdghsmprwym)
+
+To run each section explained in the slidesm, we have created many files nedes as task_{id_task_{...}}.py, where {...} has some further information. These files are to be rune as follows:
+```
+$ python week4/task_{id_task_{...}}.py
+```
+
+Furthermore, we created two files to evaluate and plot results of the retrieval and metric learning models:
+```
+$ python week4/evaluation_metrics.py
+$ python week4/plot_embedings.py
+```
+evaluation_metrics.py is used to evaluate the retrieval of models that return arbitrary sized embeddings, and plot_embedings.py is used to plot the embeddings of size 2 (FC 2 model).
+
+The CVPR paper corresponding to all the tasks and experiments devoted to Object Detection and Instance Segmentation can be seen in: [Paper](https://www.overleaf.com/5374743577rshpmzsgynjj)
+
+
+
 ## References
 [1] Ren, Shaoqing, et al. "Faster r-cnn: Towards real-time object detection with region proposal networks." Advances in neural information processing systems 28 (2015).
 

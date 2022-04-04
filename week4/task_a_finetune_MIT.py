@@ -1,4 +1,4 @@
-# Task c - Triplet network
+# Task b - Siamese network
 
 import os
 import os.path
@@ -7,18 +7,21 @@ from os import path
 import torch
 import torch.optim as optim
 import torchvision.transforms as transforms
+from torch import nn
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import RandomHorizontalFlip, RandomRotation
 
-from datasets import SiameseMIT_split, TripletMIT_split
+from datasets import SiameseMIT_split
 from train import fit
 # Mean and std of imagenet dataset
-from week4.losses import ContrastiveLoss, TripletLoss
-from week4.model import EmbeddingNet, SiameseNet, TripletNet
+from week4.losses import ContrastiveLoss
+from week4.model import EmbeddingNet, SiameseNet, NetSquared
 import wandb
+
 wandb.init(project="M5-week4", entity="celulaeucariota")
+
 # Available backbone models
 backbones = {
     '0': 'resnet18',
@@ -27,6 +30,7 @@ backbones = {
     '3': 'resnet101',
     '4': 'customCNN',
 }
+
 
 def main():
     # cuda management
@@ -63,25 +67,19 @@ def main():
     TEST_IMG_DIR = ROOT_PATH + "MIT_split/test/"
 
     # Method selection
-    backbone = backbones['2']
-    method = 'triplet'
-    info = '_fc'
+    backbone = backbones['4']
+    method = 'classification'
+    info = ''
     model_id = backbone + '_' + method + info
 
-    train_dataset = ImageFolder(TRAIN_IMG_DIR)  # Create the train dataset
-    test_dataset = ImageFolder(TEST_IMG_DIR)  # Create the test dataset
+    train_dataset = ImageFolder(TRAIN_IMG_DIR, transform=transform)  # Create the train dataset
+    test_dataset = ImageFolder(TEST_IMG_DIR, transform=transform)  # Create the test dataset
 
-    train_dataset_triplet = TripletMIT_split(train_dataset, split='train', transform=transform)
-    test_dataset_triplet = TripletMIT_split(test_dataset, split='test', transform=transform)
-
-    batch_size = 16
+    batch_size = 32
     # kwargs = {'num_workers': 1, 'pin_memory': True} if cuda else {}
-    triplet_train_loader = torch.utils.data.DataLoader(train_dataset_triplet, batch_size=batch_size, shuffle=True)
-    triplet_test_loader = torch.utils.data.DataLoader(test_dataset_triplet, batch_size=batch_size, shuffle=False)
-
-    margin = 1.
-    embedding_net = EmbeddingNet(backbone, model_id)
-    model = TripletNet(embedding_net)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    model = NetSquared()
 
     # Check if file exists
     if path.exists(OUTPUT_MODEL_DIR + model_id + '.pth'):
@@ -90,15 +88,21 @@ def main():
 
     if cuda:
         model.cuda()
-    loss_fn = TripletLoss(margin)
+    loss_fn = nn.CrossEntropyLoss()
 
-    lr = 1e-3
+    lr = 0.001
     optimizer = optim.Adam(model.parameters(), lr=lr)
     scheduler = lr_scheduler.StepLR(optimizer, 8, gamma=0.1, last_epoch=-1)
     n_epochs = 50
     log_interval = 10
 
-    fit(triplet_train_loader, triplet_test_loader, model, loss_fn, optimizer, scheduler, n_epochs, cuda, log_interval,
+    wandb.config = {
+        "learning_rate": lr,
+        "epochs": n_epochs,
+        "batch_size": batch_size
+    }
+
+    fit(train_loader, test_loader, model, loss_fn, optimizer, scheduler, n_epochs, cuda, log_interval,
         model_id)
 
 

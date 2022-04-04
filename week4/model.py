@@ -45,36 +45,83 @@ class NetSquared(nn.Module):
         x = self.dropout2(x)
 
         x = self.globAvgPool(x)
-        # x = self.dropout1(x)
+        x = self.dropout1(x)
         x = torch.squeeze(x)
-        # x = self.linear(x)
+        x = self.linear(x)
 
         return x
 
+    def get_embedding(self, x):
+        x = self.conv1(x)
+        x = self.relu(x)
+        x = self.maxp(x)
+        x = self.bnorm1(x)
+        x = self.dropout1(x)
+
+        x = self.conv2(x)
+        x = self.relu(x)
+        x = self.maxp(x)
+        x = self.bnorm2(x)
+        x = self.dropout2(x)
+
+        x = self.globAvgPool(x)
+        x = self.dropout1(x)
+        x = torch.squeeze(x)
+
+        return x
 
 class EmbeddingNet(nn.Module):
-    def __init__(self, backbone):
+    def __init__(self, backbone, model_id):
         super(EmbeddingNet, self).__init__()
 
         basemodel = torch.hub.load('pytorch/vision:v0.10.0', backbone, pretrained=True)
 
-
+        self.model_id = model_id
         self.base_resnet = torch.nn.Sequential(*(list(basemodel.children())[:-1]))
 
-        self.fc = nn.Sequential(nn.Linear(2048, 256),
-                                nn.PReLU(),
-                                nn.Linear(256, 256),
-                                nn.PReLU(),
-                                nn.Linear(256, 2)
-                                )
+        fc_layer = nn.Sequential(nn.Linear(2048, 256),
+                                 nn.PReLU(),
+                                 nn.Linear(256, 256),
+                                 nn.PReLU(),
+                                 nn.Linear(256, 2)
+                                 )
+        self.fc = fc_layer if "fc" in self.model_id else None
 
     def forward(self, x):
         output = self.base_resnet(x).squeeze()
-        output = self.fc(output)
+        if "fc" in self.model_id:
+            output = self.fc(output)
         return output
 
     def get_embedding(self, x):
         return self.forward(x)
+
+
+class ResnetMIT(nn.Module):
+    """
+    Class of the custom CNN
+    """
+
+    def __init__(self):
+        """
+        Initialization of the needed layers
+        """
+        super(ResnetMIT, self).__init__()
+
+        basemodel = torch.hub.load('pytorch/vision:v0.10.0', 'resnet50', pretrained=True)
+
+        self.base_resnet = torch.nn.Sequential(*(list(basemodel.children())[:-1]))
+
+        self.fc_layer = nn.Sequential(nn.Linear(2048, 256), nn.Linear(256, 8))
+
+    def forward(self, x):
+        output = self.base_resnet(x).squeeze()
+        output = self.fc_layer(output)
+        return output
+
+    def get_embedding(self, x):
+        output = self.base_resnet(x).squeeze()
+        return output
 
 
 class SiameseNet(nn.Module):

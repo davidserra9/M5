@@ -31,7 +31,8 @@ if __name__ == "__main__":
     # Method selection
     backbone = backbones['2']
     method = 'siamese'
-    model_id = backbone + '_' + method
+    info = ''
+    model_id = backbone + '_' + method + info
 
     PATH_MODEL = 'models/'
     PATH_FEATURES = 'features/'
@@ -44,11 +45,6 @@ if __name__ == "__main__":
     ROOT_PATH = "../../data/"
     TRAIN_IMG_DIR = ROOT_PATH + "MIT_split/train/"
     TEST_IMG_DIR = ROOT_PATH + "MIT_split/test/"
-
-    # Method selection
-    backbone = backbones['2']
-    method = 'siamese'
-    model_id = backbone + '_' + method
 
     train_dataset = ImageFolder(TRAIN_IMG_DIR)  # Create the train dataset
     test_dataset = ImageFolder(TEST_IMG_DIR)  # Create the test dataset
@@ -70,7 +66,7 @@ if __name__ == "__main__":
     siamese_test_loader = torch.utils.data.DataLoader(test_dataset_siamese, batch_size=batch_size, shuffle=False)
 
     # Initialize the model
-    embedding_net = EmbeddingNet(backbone)
+    embedding_net = EmbeddingNet(backbone, model_id)
     model = SiameseNet(embedding_net)
 
     model.load_state_dict(torch.load(PATH_MODEL + model_id + '.pth'))
@@ -90,7 +86,7 @@ if __name__ == "__main__":
         # Obtain the features of the images: TRAIN
         features_train, classes_train = compute_features(model_id, model, siamese_train_loader, train_db=True)
         features_test, classes_test = compute_features(model_id, model, siamese_test_loader, train_db=False)
-
+        print(model_id)
         # Retrieve the images from the test set that are similar to the image in the train set. retrieve_imgs
         # returns the indexes of the retrieved images, and we map them to the corresponding labels
         retrieved_imgs = retrieve_imgs(features_train, features_test, k=num_retrievals)

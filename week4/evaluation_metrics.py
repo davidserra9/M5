@@ -142,7 +142,14 @@ def table_precision_recall(cm, show=False):
 
     return prec, rec
 
-
+dict_classes = {'0': 'Coast',
+                '1': 'Forest',
+                '2': 'Highway',
+                '3': 'Inside City',
+                '4': 'Mountain',
+                '5': 'Open Country',
+                '6': 'Street',
+                '7': 'Tall Building'}
 def image_representation(features, classes, type='tsne'):
     """
     Plot the image representation.
@@ -174,14 +181,14 @@ def image_representation(features, classes, type='tsne'):
                 [x[0] for x in label_features],
                 [x[1] for x in label_features],
                 c=color_palette[idx],
-                label=f'{idx}-{label}',
+                label=f'{idx}-{dict_classes[str(label)]}',
             )
         plt.legend(loc='best')
 
         for idx, label in enumerate(labels):
             label_features = [pca_features[i] for i, x in enumerate(classes) if x == label]
             xtext, ytext = np.median(label_features, axis=0)
-            txt = plt.text(xtext, ytext, str(idx))
+            txt = plt.text(xtext, ytext, dict_classes[str(idx)])
             txt.set_path_effects([
                 PathEffects.Stroke(linewidth=5, foreground="w"),
                 PathEffects.Normal()])
@@ -234,7 +241,7 @@ def image_representation(features, classes, type='tsne'):
                 [x[0] for x in label_features],
                 [x[1] for x in label_features],
                 c=color_palette[idx],
-                label=f'{idx}-{label}',
+                label=f'{idx}-{dict_classes[str(label)]}',
             )
 
         plt.legend(loc='best')
@@ -242,7 +249,7 @@ def image_representation(features, classes, type='tsne'):
         for idx, label in enumerate(labels):
             label_features = [embedding[i] for i, x in enumerate(classes) if x == label]
             xtext, ytext = np.median(label_features, axis=0)
-            txt = plt.text(xtext, ytext, str(idx))
+            txt = plt.text(xtext, ytext, dict_classes[str(idx)])
             txt.set_path_effects([
                 PathEffects.Stroke(linewidth=5, foreground="w"),
                 PathEffects.Normal()])
@@ -278,11 +285,11 @@ def plot_image_retrievals(queries, retrivals, k=5):
         retrieval_paths = retrivals[query_num]
         query_image = cv2.imread(query_path)[:, :, ::-1]
         ax[i, 0].imshow(query_image)
-        ax[i, 0].set_title(query_path.split('/')[-2])
+        ax[i, 0].set_title(query_path.split('/')[-1].split("\\")[0])
         ax[i, 0].axis('off')
         for j, retrieval_path in enumerate(retrieval_paths):
             retrieval_image = cv2.imread(retrieval_path)[:, :, ::-1]
             ax[i, j + 1].imshow(retrieval_image)
-            ax[i, j + 1].set_title(retrieval_path.split('/')[-2])
+            ax[i, j + 1].set_title(retrieval_path.split('/')[-1].split("\\")[0])
             ax[i, j + 1].axis('off')
     plt.show()
