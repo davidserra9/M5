@@ -71,7 +71,7 @@ $ python week4/plot_embedings.py
 ```
 evaluation_metrics.py is used to evaluate the retrieval of models that return arbitrary sized embeddings, and plot_embedings.py is used to plot the embeddings of size 2 (FC 2 model).
 The parameters can be defined inside the files.
-The CVPR paper corresponding to all the tasks and experiments devoted to Object Detection and Instance Segmentation can be seen in: [Paper](https://www.overleaf.com/5374743577rshpmzsgynjj)
+The CVPR paper corresponding to all the tasks and experiments devoted to Methods on Image Retrieval and Metric Learning can be seen in: [Paper](https://www.overleaf.com/5374743577rshpmzsgynjj)
 
 
 
