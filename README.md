@@ -55,7 +55,7 @@ We have explored many Resnet backbones as well as the CNN built in the project f
 Furthermode, we have used Siamese and Triplet learning strategies to implicitly learn a set of features that are good for differentiating between similar and dissimilar images.
 
 
-![PlaneAsBird](/week4/clusters.PNG)
+![clusters](/week4/clusters.PNG)
 
 Slides for week 4: [Slides](https://www.overleaf.com/read/sfdghsmprwym)
 
