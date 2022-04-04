@@ -57,9 +57,9 @@ Furthermode, we have used Siamese and Triplet learning strategies to implicitly 
 
 ![clusters](/week4/clusters.PNG)
 
-Slides for week 4: [Slides](https://www.overleaf.com/read/sfdghsmprwym)
+Slides for week 4: [Slides](https://docs.google.com/presentation/d/1qiWn6Lgy8bP7voIEu2XeWV4vUKIVyG3bOKP-OrCiRMY/edit?usp=sharing)
 
-To run each section explained in the slidesm, we have created many files nedes as task_{id_task_{...}}.py, where {...} has some further information. These files are to be rune as follows:
+To run each section explained in the slidesm, we have created many files nedes as task_{id_task_{...}}.py, where {...} has some further information. These files are to be run as follows:
 ```
 $ python week4/task_{id_task_{...}}.py
 ```
@@ -70,7 +70,7 @@ $ python week4/evaluation_metrics.py
 $ python week4/plot_embedings.py
 ```
 evaluation_metrics.py is used to evaluate the retrieval of models that return arbitrary sized embeddings, and plot_embedings.py is used to plot the embeddings of size 2 (FC 2 model).
-
+The parameters can be defined inside the files.
 The CVPR paper corresponding to all the tasks and experiments devoted to Object Detection and Instance Segmentation can be seen in: [Paper](https://www.overleaf.com/5374743577rshpmzsgynjj)
 
 
