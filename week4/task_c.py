@@ -15,8 +15,8 @@ from torchvision.transforms import RandomHorizontalFlip, RandomRotation
 from datasets import SiameseMIT_split, TripletMIT_split
 from train import fit
 # Mean and std of imagenet dataset
-from week4.losses import ContrastiveLoss, TripletLoss
-from week4.model import EmbeddingNet, SiameseNet, TripletNet
+from losses import ContrastiveLoss, TripletLoss
+from model import EmbeddingNet, SiameseNet, TripletNet
 import wandb
 wandb.init(project="M5-week4", entity="celulaeucariota")
 # Available backbone models
@@ -68,14 +68,17 @@ def main():
     info = '_fc'
     model_id = backbone + '_' + method + info
 
+    # Load the datasets
     train_dataset = ImageFolder(TRAIN_IMG_DIR)  # Create the train dataset
     test_dataset = ImageFolder(TEST_IMG_DIR)  # Create the test dataset
 
     train_dataset_triplet = TripletMIT_split(train_dataset, split='train', transform=transform)
     test_dataset_triplet = TripletMIT_split(test_dataset, split='test', transform=transform)
 
-    batch_size = 16
+    batch_size = 8
     # kwargs = {'num_workers': 1, 'pin_memory': True} if cuda else {}
+
+    # Create the dataloaders
     triplet_train_loader = torch.utils.data.DataLoader(train_dataset_triplet, batch_size=batch_size, shuffle=True)
     triplet_test_loader = torch.utils.data.DataLoader(test_dataset_triplet, batch_size=batch_size, shuffle=False)
 

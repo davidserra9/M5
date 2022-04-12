@@ -44,6 +44,17 @@ def fit(train_loader, val_loader, model, loss_fn, optimizer, scheduler, n_epochs
 
 
 def train_epoch(train_loader, model, loss_fn, optimizer, cuda, log_interval, metrics):
+    """
+    Train for one epoch on the training set.
+    :param train_loader:    Train data loader
+    :param model:
+    :param loss_fn:
+    :param optimizer:
+    :param cuda:
+    :param log_interval:
+    :param metrics:
+    :return:
+    """
     for metric in metrics:
         metric.reset()
 

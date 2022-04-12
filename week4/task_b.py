@@ -15,8 +15,8 @@ from torchvision.transforms import RandomHorizontalFlip, RandomRotation
 from datasets import SiameseMIT_split
 from train import fit
 # Mean and std of imagenet dataset
-from week4.losses import ContrastiveLoss
-from week4.model import EmbeddingNet, SiameseNet
+from losses import ContrastiveLoss
+from model import EmbeddingNet, SiameseNet
 import wandb
 
 wandb.init(project="M5-week4", entity="celulaeucariota")
