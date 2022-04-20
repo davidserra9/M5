@@ -91,3 +91,4 @@ def generate_negative_idx(range, exception_idx):
         idx = np.random.randint(0, range)
         if idx != exception_idx:
             return idx
+

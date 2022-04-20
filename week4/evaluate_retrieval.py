@@ -89,8 +89,8 @@ if __name__ == '__main__':
     }
     # Method selection
     backbone = backbones['2']
-    method = 'siamese'
-    info = ''
+    method = 'triplet'
+    info = '_fc'
     model_id = backbone + '_' + method + '' + info
 
     PATH_MODEL = 'models/'

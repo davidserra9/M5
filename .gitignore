@@ -3,9 +3,11 @@
 week1/__pycache__
 week2/output
 week2/inference
+*__pycache__/
+*models/
 *wandb/
 # Ficheros que no se deberian de subir (FOTOS, GIFS, PICKLEs)
-*.png
+
 *.jpg
 *.gif
 *.pkl
