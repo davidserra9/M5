@@ -120,34 +120,12 @@ def main():
 
     for k_predictions in indices.tolist():
         # map indices with the corresponding labels
-        k_labels_pred = [text_labels[i] for i in k_predictions]
+        k_labels_pred = [image_labels[i] for i in k_predictions]
         image_labels_pred.append(k_labels_pred)
 
-    im_labels = [[i] for i in image_labels]
-    map_k = mapk(im_labels, image_labels_pred, k=k)
+    t_labels = [[i] for i in text_labels]
+    map_k = mapk(t_labels, image_labels_pred, k=k)
     print(f'mAP@{k}: {map_k}')
-
-    # Check if the correct label is in the knn
-    # new_retrievals = []
-    # for idx, retrieval in enumerate(image_labels_pred):
-    #     if image_labels[idx] in retrieval:
-    #         new_retrievals.append(image_labels[idx])
-    #     else:
-    #         new_retrievals.append([retrieval[0]])
-
-    # # compute the confusion matrix
-    # confusion_matrix = plot_confusion_matrix(im_labels, image_labels_pred, show=True)
-    #
-    # # compute the precision and recall
-    # prec, recall = table_precision_recall(confusion_matrix, show=False)
-
-    # print(f'map@k: {map_k}')
-    # print(f'precision@k: {np.mean(prec)}')
-    # print(f'recall@k: {np.mean(recall)}')
-
-    # Compute the accuracy
-    knn_accuracy = knn.score(image_embeddings, image_labels)
-    print('KNN accuracy: {}%'.format(100*knn_accuracy))
 
     # Qualitative results
     num_samples = 10

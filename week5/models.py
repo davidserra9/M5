@@ -103,6 +103,7 @@ class TripletImageText(nn.Module):
         text_embedding = self.embedding_text_net(text)
         return img_embedding, text_embedding
 
+
 # Network definition for the triplet network in the text to image case
 class TripletTextImage(nn.Module):
     def __init__(self, embedding_text_net, embedding_image_net, margin=1.0):
@@ -119,3 +120,9 @@ class TripletTextImage(nn.Module):
         img2_embedding = self.embedding_image_net(img2)
 
         return text_embedding, img1_embedding, img2_embedding
+
+    def get_embedding_pair(self, img, text):
+        # Get the embeddings for the image and the text
+        img_embedding = self.embedding_image_net(img)
+        text_embedding = self.embedding_text_net(text)
+        return img_embedding, text_embedding

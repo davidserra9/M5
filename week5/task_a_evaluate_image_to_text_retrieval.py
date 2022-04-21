@@ -18,7 +18,7 @@ from sklearn.neighbors import KNeighborsClassifier
 import matplotlib.pyplot as plt
 from datasets import Flickr30k
 from models import EmbeddingImageNet, EmbeddingTextNet, TripletImageText
-from week4.evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall
+from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall
 
 cuda = torch.cuda.is_available()
 
