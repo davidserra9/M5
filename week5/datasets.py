@@ -36,12 +36,12 @@ class Flickr30k(Dataset):
 
     def __getitem__(self, index):
         img_embedding = self.image_embeddings[:, index]
-        text_embedding = self.text_embeddings[index][random.randint(0, self.num_captions - 1)]
+        text_embedding = self.text_embeddings[index]
 
         return img_embedding, text_embedding
 
     def __len__(self):
-        return len(self.length_dataset)
+        return self.length_dataset
 
     def aggregate_text_embedding(self, text_embeddings):
         aggregated_text_embeddings = []
@@ -74,10 +74,11 @@ class TripletFlickr30kImgToText(Dataset):
             # Loop to create fixed triplets for testing
             triplets = []
             for anchor_index in range(self.n_samples):
-                # Get anchor image
-                anchor_img = self.dataset.image_embeddings[:, anchor_index]
-                # Get positive text embedding (random from the set of 5 texts)
-                positive_text = self.dataset.text_embeddings[anchor_index, random.randint(0, 4)]
+                # Get anchor image and positive text embedding (random from the set of 5 texts)
+                anchor_img, positive_text = self.dataset[anchor_index]
+
+                # Chose only a random text from the 5
+                positive_text = positive_text[random.randint(0, 4)]
 
                 # Get index of the negative text embedding
                 negative_text_index = anchor_index
@@ -97,6 +98,8 @@ class TripletFlickr30kImgToText(Dataset):
             # Get anchor image and positive text embedding (random from the set of 5 texts)
             anchor_img, positive_text = self.dataset[index]
 
+            # Chose only a random text from the 5
+            positive_text = positive_text[random.randint(0, 4)]
             # Get index of the negative text embedding
             negative_text_index = index
             while negative_text_index == index:
@@ -122,12 +125,6 @@ class TripletFlickr30kTextToImg(Dataset):
         self.dataset = dataset
         self.n_samples = dataset.length_dataset
         self.train = split == 'train'
-        # Transform the output of the Dataset object into Tensor
-        self.transform = transforms.Compose(
-            [
-                transforms.ToTensor()
-            ]
-        )
 
         if not self.train:  # Test triplets
             # Loop to create fixed triplets for testing
@@ -135,7 +132,8 @@ class TripletFlickr30kTextToImg(Dataset):
             for anchor_index in range(self.n_samples):
                 # Get anchor image and positive text embedding (random from the set of 5 texts)
                 positive_image, anchor_text = self.dataset[anchor_index]
-
+                # Chose only a random text from the 5
+                anchor_text = anchor_text[random.randint(0, 4)]
                 # Get index of the negative text embedding
                 negative_image_index = anchor_index
                 while negative_image_index == anchor_index:
@@ -153,7 +151,8 @@ class TripletFlickr30kTextToImg(Dataset):
         if self.train:
             # Get anchor image and positive text embedding (random from the set of 5 texts)
             positive_image, anchor_text = self.dataset[index]
-
+            # Chose only a random text from the 5
+            anchor_text = anchor_text[random.randint(0, 4)]
             # Get index of the negative text embedding
             negative_image_index = index
             while negative_image_index == index:

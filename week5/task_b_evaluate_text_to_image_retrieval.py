@@ -12,13 +12,14 @@ import os.path
 import pickle
 from os import path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from sklearn.neighbors import KNeighborsClassifier
-import matplotlib.pyplot as plt
+
 from datasets import Flickr30k
-from models import EmbeddingImageNet, EmbeddingTextNet, TripletImageText
-from week4.evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall
+from models import EmbeddingImageNet, EmbeddingTextNet, TripletTextImage
+from week4.evaluation_metrics import mapk
 
 cuda = torch.cuda.is_available()
 
@@ -50,7 +51,7 @@ def main():
     TEST_TEXT_EMB = ROOT_PATH + "Flickr30k/test_fasttext_features.pkl"
 
     # Method selection
-    base = 'ImageToText'
+    base = 'TextToImage'
     text_aggregation = 'mean'
     image_features = 'VGG'
     out_size = 4096
@@ -72,7 +73,7 @@ def main():
     margin = 1.
     embedding_text_net = EmbeddingTextNet(embedding_size=300, output_size=out_size, late_fusion=None)
     embedding_image_net = EmbeddingImageNet(output_size=out_size)
-    model = TripletImageText(embedding_text_net, embedding_image_net, margin=margin)
+    model = TripletTextImage(embedding_text_net, embedding_image_net, margin=margin)
 
     # Check if file exists
     if path.exists(PATH_MODEL + model_id + '.pth'):
@@ -109,16 +110,14 @@ def main():
     #     print('Loading the nearest neighbors from the disk, {}'.format(model_id + '_knn.pkl'))
     #     distances, indices = pickle.load(open(PATH_RESULTS + model_id + '_knn.pkl', 'rb'))
     # else:
-    knn = KNeighborsClassifier(n_neighbors=k, algorithm='ball_tree').fit(text_embeddings, text_labels)
+    knn = KNeighborsClassifier(n_neighbors=k, algorithm='ball_tree').fit(image_embeddings, image_labels)
 
     # Make predictions
-    distances, indices = knn.kneighbors(image_embeddings)
-    # pickle.dump((distances, indices), open(PATH_MODEL + model_id + '_knn.pkl', 'wb'))
+    distances, indices = knn.kneighbors(text_embeddings)
 
     # Compute mAPk
     image_labels_pred = []
-    # We create a dict to map the index of a single text with its corresponding label (image)
-    text_labels_pred_dict = {}
+
     for k_predictions in indices.tolist():
         # map indices with the corresponding labels
         k_labels_pred = [text_labels[i] for i in k_predictions]

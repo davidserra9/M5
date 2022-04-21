@@ -21,7 +21,7 @@ class EmbeddingTextNet(nn.Module):
                                  nn.Linear(1024, 2048),
                                  nn.PReLU(),
                                  nn.Linear(2048, output_size)
-                                 )  # 256 is the size of the final text embedding
+                                 )  # output_size is the size of the final text embedding
 
         # Define a dropout layer with probability p
         self.dropout = nn.Dropout(p=0.1)
@@ -67,8 +67,10 @@ class EmbeddingImageNet(nn.Module):
         super(EmbeddingImageNet, self).__init__()
 
         # Define a fully connected layer with input of n_input and output n_output neurons
-        self.fc1 = nn.Linear(4096, output_size)  # 512 is the size of the final image embedding
-
+        self.fc1 = nn.Sequential(nn.Linear(4096, 2048),
+                                 nn.PReLU(),
+                                 nn.Linear(2048, output_size)
+                                 )  # output_size is the size of the final image embedding
         # Define a dropout layer with probability p
         self.dropout = nn.Dropout(p=0.5)
 
@@ -95,6 +97,11 @@ class TripletImageText(nn.Module):
 
         return img_embedding, text_embedding, negative_text_embedding
 
+    def get_embedding_pair(self, img, text):
+        # Get the embeddings for the image and the text
+        img_embedding = self.embedding_image_net(img)
+        text_embedding = self.embedding_text_net(text)
+        return img_embedding, text_embedding
 
 # Network definition for the triplet network in the text to image case
 class TripletTextImage(nn.Module):
