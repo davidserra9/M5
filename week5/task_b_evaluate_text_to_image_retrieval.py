@@ -19,7 +19,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from datasets import Flickr30k
 from models import EmbeddingImageNet, EmbeddingTextNet, TripletTextImage
-from week4.evaluation_metrics import mapk
+from evaluation_metrics import mapk
 
 cuda = torch.cuda.is_available()
 
@@ -103,7 +103,7 @@ def main():
 
     # Compute the nearest neighbors
     print('Computing the nearest neighbors...')
-    k = 5  # Number of nearest neighbors
+    k = 1  # Number of nearest neighbors
 
     # # load results if exists
     # if path.exists(PATH_RESULTS + model_id + '_knn.pkl'):
@@ -118,40 +118,49 @@ def main():
     # Compute mAPk
     image_labels_pred = []
 
+    #
     for k_predictions in indices.tolist():
         # map indices with the corresponding labels
         k_labels_pred = [image_labels[i] for i in k_predictions]
         image_labels_pred.append(k_labels_pred)
 
-    t_labels = [[i] for i in text_labels]
+    t_labels = [[i] for i in text_labels] # Convert list of labels into list of list (for mapk function)
     map_k = mapk(t_labels, image_labels_pred, k=k)
     print(f'mAP@{k}: {map_k}')
 
     # Qualitative results
     num_samples = 10
     # Create random samples
-    random_samples = np.random.choice(image_labels, num_samples, replace=False)
+    random_samples = np.random.choice(list(range(5000)), num_samples, replace=False)
+
     # im_labels, image_labels_pred
     for sample in random_samples:
         print("Example:" + str(sample))
         print("--------------------------------")
 
-        # Get image embedding from batch
-        filename = list(gt)[sample]
-        print("Ground truth: ")
-        for t in gt[filename]:
-            print(t)
+        print("Query text: " + dict_sentences[sample])
 
+        # Obtain ground truth image, mapping the text sample to the image id
+        gt_image_id = text_labels[sample]
+        # Map the id to the image filename
+        gt_image_filename = list(gt)[gt_image_id - 1]
+        plt.figure(figsize=(20, 10))
+        # Plot the ground truth image
+        plt.subplot(1, k+1, 1)
+        plt.imshow(plt.imread(ROOT_PATH + 'Flickr30k/flickr30k-images/' + gt_image_filename))
+
+        # Get predicted images from that text
         predictions = indices[sample]
-
-        print("Predictions:")
+        count = 1
         for pred in predictions:
-            print(dict_sentences[pred])
-
-        im = plt.imread(ROOT_PATH + 'Flickr30k/flickr30k-images/' + filename)
-        plt.imshow(im)
+            filename = list(gt)[pred]
+            plt.subplot(1, k+1, count + 1)
+            plt.imshow(plt.imread(ROOT_PATH + 'Flickr30k/flickr30k-images/' + filename))
+            count += 1
         plt.show()
         print("--------------------------------------------------------------------------------")
+
+
 # Main
 if __name__ == '__main__':
     main()

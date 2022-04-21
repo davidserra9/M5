@@ -55,7 +55,7 @@ def main():
     emb_size = 300
     out_size = 4096
     info = 'out_size_' + str(out_size)
-    model_id = base + '_' + image_features + '_' + text_aggregation + '_textagg_' + "_" + info
+    model_id = base + '_' + image_features + '_' + text_aggregation + '_textagg_' + info
 
     # Load the datasets
     train_dataset = Flickr30k(TRAIN_IMG_EMB, TRAIN_TEXT_EMB, train=True,
@@ -96,7 +96,7 @@ def main():
 
     print('Starting training, EPOCH: ', start_epoch)
     n_epochs = 50
-    log_interval = 10
+    log_interval = 5
 
     # Wandb configuration
     wandb.config = {

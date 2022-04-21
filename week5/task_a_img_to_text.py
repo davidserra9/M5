@@ -50,7 +50,7 @@ def main():
 
     # Method selection
     base = 'ImageToText'
-    text_aggregation = 'mean'
+    text_aggregation = 'sum'
     image_features = 'VGG'
     emb_size = 300
     out_size = 4096
