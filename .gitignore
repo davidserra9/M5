@@ -6,6 +6,9 @@ week2/inference
 *__pycache__/
 *models/
 *wandb/
+*results/
+week5/adapt_features.py.py
+week5/model.py
 # Ficheros que no se deberian de subir (FOTOS, GIFS, PICKLEs)
 
 *.jpg

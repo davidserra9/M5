@@ -74,6 +74,25 @@ The parameters can be defined inside the files.
 The CVPR paper corresponding to all the tasks and experiments devoted to Methods on Image Retrieval and Metric Learning can be seen in: [Paper](https://www.overleaf.com/5374743577rshpmzsgynjj)
 
 
+## Week5
+The tasks for this week are aimed to explore cross-modal retrieval. This problem is posed as constructing a latent space where pairs of images and text captions are projected, following a similarity metric.
+For this purpose, feature embeddings are computed from both the images and the text captions. The embeddings are then projected into a latent space, and the similarity between the embeddings is computed.
+For images, we use CNN features obtained using VGG and Faster RCNN. For text, we use the pre-trained word embeddings from the FastText project, as well as the ones from BERT.
+The approach uses metric learning in a Triplet-fashion, where the triplet loss is used to learn the embeddings of the images and the text captions. Furthermore, Image-to-Text and Text-to-Image retrieval are performed (using two separate models).
+
+To run the experiments, we first use a simple script to unify the given features (VGG and FastText) and define train, val and test splits.
+```
+$ python week5/manafe_Flickr_dataset.py
+```
+
+Then, we run the experiments. {task_info} is a string that contains the information about the task.
+```
+$ python week5/task_{id_task}_{task_info}.py
+```
+
+The CVPR paper corresponding to all the tasks and experiments devoted to Cross-modal retrieval is available at: [Paper](https://www.overleaf.com/5374743577rshpmzsgynjj)
+The slides corresponding to week 5 experiments, and a summary of the whole module is available at: [Slides](https://docs.google.com/presentation/d/1qiWn6Lgy8bP7voIEu2XeWV4vUKIVyG3bOKP-OrCiRMY/edit?usp=sharing)
+
 
 ## References
 [1] Ren, Shaoqing, et al. "Faster r-cnn: Towards real-time object detection with region proposal networks." Advances in neural information processing systems 28 (2015).
