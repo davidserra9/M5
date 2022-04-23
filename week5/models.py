@@ -6,7 +6,6 @@ Description:
     - For a triplet network, the model is defined as:
         - Input: (img, positive_text, negative_text)
 """
-import torch
 import torch.nn as nn
 
 

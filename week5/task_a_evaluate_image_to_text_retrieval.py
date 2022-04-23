@@ -70,7 +70,7 @@ def main():
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1000, shuffle=False, num_workers=1)
 
     margin = 1.
-    embedding_text_net = EmbeddingTextNet(embedding_size=300, output_size=out_size, late_fusion=None)
+    embedding_text_net = EmbeddingTextNet(embedding_size=300, output_size=out_size, sequence_modeling=None)
     embedding_image_net = EmbeddingImageNet(input_size=4096, output_size=out_size)
     model = TripletImageText(embedding_text_net, embedding_image_net, margin=margin)
 

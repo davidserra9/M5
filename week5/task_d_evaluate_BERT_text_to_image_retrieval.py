@@ -48,11 +48,11 @@ def main():
     # Load the datasets
     ROOT_PATH = "../../data/"
     TEST_IMG_EMB = ROOT_PATH + "Flickr30k/test_vgg_features.pkl"
-    TEST_TEXT_EMB = ROOT_PATH + "Flickr30k/test_fasttext_features.pkl"
+    TEST_TEXT_EMB = ROOT_PATH + "Flickr30k/test_bert_features.pkl"
 
     # Method selection
     base = 'TextToImage'
-    text_aggregation = 'sum'
+    text_aggregation = 'BERT'
     image_features = 'VGG'
     out_size = 4096
     info = 'out_size_' + str(out_size)
@@ -71,7 +71,7 @@ def main():
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1000, shuffle=False, num_workers=1)
 
     margin = 1.
-    embedding_text_net = EmbeddingTextNet(embedding_size=300, output_size=out_size, late_fusion=None)
+    embedding_text_net = EmbeddingTextNet(embedding_size=300, output_size=out_size, sequence_modeling=None)
     embedding_image_net = EmbeddingImageNet(output_size=out_size)
     model = TripletTextImage(embedding_text_net, embedding_image_net, margin=margin)
 
