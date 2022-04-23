@@ -53,7 +53,7 @@ def main():
     base = 'TextToImage'
     text_aggregation = 'BERT'
     image_features = 'VGG'
-    emb_size = 300
+    emb_size = 768
     out_size = 4096
     info = 'out_size_' + str(out_size)
     model_id = base + '_' + image_features + '_' + text_aggregation + '_textagg_' + info
