@@ -28,9 +28,10 @@ class Flickr30k(Dataset):
         # Number of captions per image
         self.num_captions = len(self.text_embeddings[0])
 
-        if self.text_aggregation is not None:
+        if self.text_aggregation is not 'BERT':
             self.text_embeddings = self.aggregate_text_embedding(self.text_embeddings)
-
+        else:
+            self.text_embeddings = self.text_embeddings.reshape(self.text_embeddings.shape[0] // 5, 5, -1)
         # Length of the dataset
         self.length_dataset = len(self.image_embeddings[1])
 

@@ -52,7 +52,7 @@ def main():
 
     # Method selection
     base = 'TextToImage'
-    text_aggregation = 'mean'
+    text_aggregation = 'sum'
     image_features = 'VGG'
     out_size = 4096
     info = 'out_size_' + str(out_size)
@@ -103,7 +103,7 @@ def main():
 
     # Compute the nearest neighbors
     print('Computing the nearest neighbors...')
-    k = 1  # Number of nearest neighbors
+    k = 5  # Number of nearest neighbors
 
     # # load results if exists
     # if path.exists(PATH_RESULTS + model_id + '_knn.pkl'):

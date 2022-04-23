@@ -12,9 +12,9 @@ import torch.nn as nn
 
 # Network definition for the textual aggregation
 class EmbeddingTextNet(nn.Module):
-    def __init__(self, embedding_size, output_size, late_fusion=None):
+    def __init__(self, embedding_size, output_size, sequence_modeling=None):
         super(EmbeddingTextNet, self).__init__()
-        self.late_fusion = late_fusion
+        self.sequence_modeling = sequence_modeling
         # Define a fully connected layer with input of n_input and output n_output neurons
         self.fc1 = nn.Sequential(nn.Linear(embedding_size, 1024),
                                  nn.PReLU(),
@@ -26,17 +26,14 @@ class EmbeddingTextNet(nn.Module):
         # Define a dropout layer with probability p
         self.dropout = nn.Dropout(p=0.1)
 
-        # Define a transformers to aggregate the text embeddings
-
         # Define a LSTM layer
         self.lstm = nn.LSTM(input_size=embedding_size, hidden_size=embedding_size, num_layers=1, batch_first=True)
 
     # forward method
     def forward(self, x):
         # Apply late fusion aggregation
-        if self.late_fusion is not None:
-            # Apply late fusion aggregation
-            x = self.late_fusion(self.late_fusion, x)
+        if self.sequence_modeling is 'LSTM':
+            x = self.lstm(x)  # To Do: Pad the sequences and use last LSTM layer
 
         # Project to common latent space for the image and text
         out = self.fc1(x)
@@ -63,11 +60,11 @@ class EmbeddingTextNet(nn.Module):
 
 # Network definition for the image embedding
 class EmbeddingImageNet(nn.Module):
-    def __init__(self, output_size):
+    def __init__(self, input_size, output_size):
         super(EmbeddingImageNet, self).__init__()
 
         # Define a fully connected layer with input of n_input and output n_output neurons
-        self.fc1 = nn.Sequential(nn.Linear(4096, 2048),
+        self.fc1 = nn.Sequential(nn.Linear(input_size, 2048),
                                  nn.PReLU(),
                                  nn.Linear(2048, output_size)
                                  )  # output_size is the size of the final image embedding

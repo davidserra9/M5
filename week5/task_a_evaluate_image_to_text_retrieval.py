@@ -51,7 +51,7 @@ def main():
 
     # Method selection
     base = 'ImageToText'
-    text_aggregation = 'mean'
+    text_aggregation = 'sum'
     image_features = 'VGG'
     out_size = 4096
     info = 'out_size_' + str(out_size)
@@ -71,7 +71,7 @@ def main():
 
     margin = 1.
     embedding_text_net = EmbeddingTextNet(embedding_size=300, output_size=out_size, late_fusion=None)
-    embedding_image_net = EmbeddingImageNet(output_size=out_size)
+    embedding_image_net = EmbeddingImageNet(input_size=4096, output_size=out_size)
     model = TripletImageText(embedding_text_net, embedding_image_net, margin=margin)
 
     # Check if file exists
@@ -102,7 +102,7 @@ def main():
 
     # Compute the nearest neighbors
     print('Computing the nearest neighbors...')
-    k = 5  # Number of nearest neighbors
+    k = 1  # Number of nearest neighbors
 
     # # load results if exists
     # if path.exists(PATH_RESULTS + model_id + '_knn.pkl'):

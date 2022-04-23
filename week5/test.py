@@ -1,25 +1,21 @@
-import json
-import os.path
 import pickle
-from os import path
 
 import numpy as np
-import torch
-from sklearn.neighbors import KNeighborsClassifier
 
-from datasets import Flickr30k
-from models import EmbeddingImageNet, EmbeddingTextNet, TripletImageText
-from week4.evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall
+ROOT_PATH = "../../data/"
 
-image_labels = [i for i in range(1, 1000 + 1)]
+TRAIN_IMG_EMB = ROOT_PATH + "Flickr30k/train_vgg_features.pkl"
+TEST_IMG_EMB = ROOT_PATH + "Flickr30k/val_vgg_features.pkl"
 
-# Qualitative results
-num_samples = 10
-# Create random samples
-random_samples = np.random.choice(image_labels, num_samples, replace=False)
+TRAIN_TEXT_EMB = ROOT_PATH + "Flickr30k/train_bert_features.pkl"
+TEST_TEXT_EMB = ROOT_PATH + "Flickr30k/val_bert_features.pkl"
 
-for sample in random_samples:
-    print(sample)
-    # Get image embedding from batch
-print()
+
+# Load the text embeddings
+with open(TRAIN_TEXT_EMB, 'rb') as f:
+    text_embeddings = pickle.load(f)
+
+res = text_embeddings.reshape(text_embeddings.shape[0]//5, 5, -1)
+print(res.shape)
+
 

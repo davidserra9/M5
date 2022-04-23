@@ -50,7 +50,7 @@ def main():
 
     # Method selection
     base = 'TextToImage'
-    text_aggregation = 'mean'
+    text_aggregation = 'sum'
     image_features = 'VGG'
     emb_size = 300
     out_size = 4096
@@ -74,8 +74,8 @@ def main():
     triplet_test_loader = torch.utils.data.DataLoader(test_dataset_triplet, batch_size=batch_size, shuffle=False)
 
     margin = 1.
-    embedding_text_net = EmbeddingTextNet(embedding_size=emb_size, output_size=out_size, late_fusion=None)
-    embedding_image_net = EmbeddingImageNet(output_size=out_size)
+    embedding_text_net = EmbeddingTextNet(embedding_size=emb_size, output_size=out_size, sequence_modeling=None)
+    embedding_image_net = EmbeddingImageNet(input_size=4096, output_size=out_size)
     model = TripletTextImage(embedding_text_net, embedding_image_net, margin=margin)
 
     if cuda:
