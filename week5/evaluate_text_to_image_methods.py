@@ -47,24 +47,20 @@ def extract_embeddings(dataloader, model, out_size=256, model_id=''):
 def main():
     # Load the datasets
     ROOT_PATH = "../../data/"
-    TEST_IMG_EMB = ROOT_PATH + "Flickr30k/test_vgg_features.pkl"
+    TEST_IMG_EMB = ROOT_PATH + "Flickr30k/test_VQVAE_features.pkl"
     TEST_TEXT_EMB = ROOT_PATH + "Flickr30k/test_bert_features.pkl"
 
     # Method selection
     base = 'TextToImage'
     text_aggregation = 'BERT'
-    image_features = 'VGG'
+    image_features = 'VQVAE'
     emb_size = 768
     out_size = 4096
-    input_size = 4096
+    input_size = 256
     info = 'out_size_' + str(out_size)
     model_id = base + '_' + image_features + '_' + text_aggregation + '_textagg_' + info
 
     PATH_MODEL = 'models/'
-    PATH_RESULTS = 'results/'
-    # Create folder if it does not exist
-    if not path.exists(PATH_RESULTS):
-        os.makedirs(PATH_RESULTS)
 
     # Load the test dataset
     test_dataset = Flickr30k(TEST_IMG_EMB, TEST_TEXT_EMB, train=False,
@@ -98,6 +94,7 @@ def main():
 
     # Extract embeddings
     image_embeddings, text_embeddings = extract_embeddings(test_loader, model, out_size, model_id)
+
     # Compute the labels for each embedding
     image_labels = [i for i in range(1, 1000 + 1)]
     text_labels = [j for j in range(1, 1000 + 1) for i in range(5)]  # Trick to obtain the same
@@ -141,7 +138,7 @@ def main():
         gt_image_id = text_labels[sample]
         # Map the id to the image filename
         gt_image_filename = list(gt)[gt_image_id - 1]
-        plt.figure(figsize=(20, 10))
+        plt.figure(figsize=(15, 10))
         # Plot the ground truth image
         plt.subplot(1, k+1, 1)
         plt.imshow(plt.imread(ROOT_PATH + 'Flickr30k/flickr30k-images/' + gt_image_filename))

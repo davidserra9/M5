@@ -13,7 +13,7 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 
-from datasets import Flickr30k, TripletFlickr30kImgToText, TripletFlickr30kTextToImg
+from datasets import Flickr30k, TripletFlickr30kTextToImg
 
 from train import fit
 from losses import TripletLoss
@@ -43,17 +43,20 @@ def main():
 
     # Load the datasets
     ROOT_PATH = "../../data/"
-    TRAIN_IMG_EMB = ROOT_PATH + "Flickr30k/train_vgg_features.pkl"
-    TEST_IMG_EMB = ROOT_PATH + "Flickr30k/val_vgg_features.pkl"
-    TRAIN_TEXT_EMB = ROOT_PATH + "Flickr30k/train_fasttext_features.pkl"
-    TEST_TEXT_EMB = ROOT_PATH + "Flickr30k/val_fasttext_features.pkl"
+    TRAIN_IMG_EMB = ROOT_PATH + "Flickr30k/train_VQVAE_features.pkl"
+    TEST_IMG_EMB = ROOT_PATH + "Flickr30k/val_VQVAE_features.pkl"
+
+    TRAIN_TEXT_EMB = ROOT_PATH + "Flickr30k/train_bert_features.pkl"
+    TEST_TEXT_EMB = ROOT_PATH + "Flickr30k/val_bert_features.pkl"
 
     # Method selection
     base = 'TextToImage'
-    text_aggregation = 'sum'
-    image_features = 'VGG'
-    emb_size = 300
+    text_aggregation = 'BERT'
+    image_features = 'VQVAE'
+    emb_size = 768
+    input_size = 256
     out_size = 4096
+
     info = 'out_size_' + str(out_size)
     model_id = base + '_' + image_features + '_' + text_aggregation + '_textagg_' + info
 
@@ -66,7 +69,7 @@ def main():
     train_dataset_triplet = TripletFlickr30kTextToImg(train_dataset, split='train')
     test_dataset_triplet = TripletFlickr30kTextToImg(test_dataset, split='test')
 
-    batch_size = 256
+    batch_size = 1024
     # kwargs = {'num_workers': 1, 'pin_memory': True} if cuda else {}
 
     # Create the dataloaders
@@ -75,14 +78,14 @@ def main():
 
     margin = 1.
     embedding_text_net = EmbeddingTextNet(embedding_size=emb_size, output_size=out_size, sequence_modeling=None)
-    embedding_image_net = ResnetFlickr(input_size=4096, output_size=out_size)
+    embedding_image_net = ResnetFlickr(input_size=input_size, output_size=out_size)
     model = TripletTextImage(embedding_text_net, embedding_image_net, margin=margin)
 
     if cuda:
         model.cuda()
     loss_fn = TripletLoss(margin)
 
-    lr = 1e-4
+    lr = 1e-3
     optimizer = optim.Adam(model.parameters(), lr=lr)
     scheduler = lr_scheduler.StepLR(optimizer, 8, gamma=0.1, last_epoch=-1)
     start_epoch = 0
@@ -95,7 +98,7 @@ def main():
         start_epoch = checkpoint['epoch']
 
     print('Starting training, EPOCH: ', start_epoch)
-    n_epochs = 100
+    n_epochs = 50
     log_interval = 5
 
     # Wandb configuration

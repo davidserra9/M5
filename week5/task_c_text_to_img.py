@@ -17,7 +17,7 @@ from datasets import Flickr30k, TripletFlickr30kTextToImg
 
 from train import fit
 from losses import TripletLoss
-from models import EmbeddingImageNet, EmbeddingTextNet, TripletTextImage
+from models import ResnetFlickr, EmbeddingTextNet, TripletTextImage
 import wandb
 
 wandb.init(project="M5-week5", entity="celulaeucariota")
@@ -56,7 +56,7 @@ def main():
     out_size = 4096
     inp_size = 1024
     info = 'out_size_' + str(out_size)
-    model_id = base + '_' + image_features + '_' + text_aggregation + '_textagg_' + "_" + info
+    model_id = base + '_' + image_features + '_' + text_aggregation + '_textagg_' + info
 
     # Load the datasets
     train_dataset = Flickr30k(TRAIN_IMG_EMB, TRAIN_TEXT_EMB, train=True,
@@ -68,7 +68,6 @@ def main():
     test_dataset_triplet = TripletFlickr30kTextToImg(test_dataset, split='test')
 
     batch_size = 1024
-    # kwargs = {'num_workers': 1, 'pin_memory': True} if cuda else {}
 
     # Create the dataloaders
     triplet_train_loader = torch.utils.data.DataLoader(train_dataset_triplet, batch_size=batch_size, shuffle=True)
@@ -76,7 +75,7 @@ def main():
 
     margin = 1.
     embedding_text_net = EmbeddingTextNet(embedding_size=emb_size, output_size=out_size, sequence_modeling=None)
-    embedding_image_net = EmbeddingImageNet(input_size=inp_size, output_size=out_size)
+    embedding_image_net = ResnetFlickr(input_size=inp_size, output_size=out_size)
     model = TripletTextImage(embedding_text_net, embedding_image_net, margin=margin)
 
     if cuda:

@@ -119,7 +119,7 @@ def get_feature_map_rcnn(cfg, processFeatures='mean_pool2d'):
                 features = features.reshape(features.shape[0], -1)
             else:
                 raise NotImplementedError('only mean pooling in 2d and 1d is implemented until now')
-            all_features = np.transpose(all_features)
+
             # store features in all_features variable, where for each image
             if batch_idx != 0:
                 all_features = np.concatenate((all_features, features))

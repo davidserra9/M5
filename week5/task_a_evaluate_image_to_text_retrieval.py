@@ -17,7 +17,7 @@ import torch
 from sklearn.neighbors import KNeighborsClassifier
 import matplotlib.pyplot as plt
 from datasets import Flickr30k
-from models import EmbeddingImageNet, EmbeddingTextNet, TripletImageText
+from models import ResnetFlickr, EmbeddingTextNet, TripletImageText
 from evaluation_metrics import mapk, plot_confusion_matrix, table_precision_recall
 
 cuda = torch.cuda.is_available()
@@ -71,7 +71,7 @@ def main():
 
     margin = 1.
     embedding_text_net = EmbeddingTextNet(embedding_size=300, output_size=out_size, sequence_modeling=None)
-    embedding_image_net = EmbeddingImageNet(input_size=4096, output_size=out_size)
+    embedding_image_net = ResnetFlickr(input_size=4096, output_size=out_size)
     model = TripletImageText(embedding_text_net, embedding_image_net, margin=margin)
 
     # Check if file exists
@@ -104,11 +104,6 @@ def main():
     print('Computing the nearest neighbors...')
     k = 1  # Number of nearest neighbors
 
-    # # load results if exists
-    # if path.exists(PATH_RESULTS + model_id + '_knn.pkl'):
-    #     print('Loading the nearest neighbors from the disk, {}'.format(model_id + '_knn.pkl'))
-    #     distances, indices = pickle.load(open(PATH_RESULTS + model_id + '_knn.pkl', 'rb'))
-    # else:
     knn = KNeighborsClassifier(n_neighbors=k, algorithm='ball_tree').fit(text_embeddings, text_labels)
 
     # Make predictions
@@ -127,24 +122,6 @@ def main():
     im_labels = [[i] for i in image_labels]
     map_k = mapk(im_labels, image_labels_pred, k=k)
     print(f'mAP@{k}: {map_k}')
-
-    # Check if the correct label is in the knn
-    # new_retrievals = []
-    # for idx, retrieval in enumerate(image_labels_pred):
-    #     if image_labels[idx] in retrieval:
-    #         new_retrievals.append(image_labels[idx])
-    #     else:
-    #         new_retrievals.append([retrieval[0]])
-
-    # # compute the confusion matrix
-    # confusion_matrix = plot_confusion_matrix(im_labels, image_labels_pred, show=True)
-    #
-    # # compute the precision and recall
-    # prec, recall = table_precision_recall(confusion_matrix, show=False)
-
-    # print(f'map@k: {map_k}')
-    # print(f'precision@k: {np.mean(prec)}')
-    # print(f'recall@k: {np.mean(recall)}')
 
     # Compute the accuracy
     knn_accuracy = knn.score(image_embeddings, image_labels)

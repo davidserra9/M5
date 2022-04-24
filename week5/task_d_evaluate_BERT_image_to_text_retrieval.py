@@ -18,7 +18,7 @@ import torch
 from sklearn.neighbors import KNeighborsClassifier
 
 from datasets import Flickr30k
-from models import ResnetFlickr, EmbeddingTextNet, TripletTextImage
+from models import ResnetFlickr, EmbeddingTextNet, TripletTextImage, TripletImageText
 from evaluation_metrics import mapk
 
 cuda = torch.cuda.is_available()
@@ -51,7 +51,7 @@ def main():
     TEST_TEXT_EMB = ROOT_PATH + "Flickr30k/test_bert_features.pkl"
 
     # Method selection
-    base = 'TextToImage'
+    base = 'ImageToText'
     text_aggregation = 'BERT'
     image_features = 'VGG'
     emb_size = 768
@@ -75,7 +75,7 @@ def main():
     margin = 1.
     embedding_text_net = EmbeddingTextNet(embedding_size=emb_size, output_size=out_size, sequence_modeling=None)
     embedding_image_net = ResnetFlickr(input_size=input_size, output_size=out_size)
-    model = TripletTextImage(embedding_text_net, embedding_image_net, margin=margin)
+    model = TripletImageText(embedding_text_net, embedding_image_net, margin=margin)
 
     # Check if file exists
     if path.exists(PATH_MODEL + model_id + '.pth'):
@@ -107,53 +107,51 @@ def main():
     print('Computing the nearest neighbors...')
     k = 5  # Number of nearest neighbors
 
-    knn = KNeighborsClassifier(n_neighbors=k, algorithm='auto', metric='euclidean').fit(image_embeddings, image_labels)
+    knn = KNeighborsClassifier(n_neighbors=k, algorithm='ball_tree').fit(text_embeddings, text_labels)
 
     # Make predictions
-    distances, indices = knn.kneighbors(text_embeddings)
+    distances, indices = knn.kneighbors(image_embeddings)
+    # pickle.dump((distances, indices), open(PATH_MODEL + model_id + '_knn.pkl', 'wb'))
 
     # Compute mAPk
     image_labels_pred = []
-
-    #
+    # We create a dict to map the index of a single text with its corresponding label (image)
     for k_predictions in indices.tolist():
         # map indices with the corresponding labels
-        k_labels_pred = [image_labels[i] for i in k_predictions]
+        k_labels_pred = [text_labels[i] for i in k_predictions]
         image_labels_pred.append(k_labels_pred)
 
-    t_labels = [[i] for i in text_labels] # Convert list of labels into list of list (for mapk function)
-    map_k = mapk(t_labels, image_labels_pred, k=k)
+    im_labels = [[i] for i in image_labels]
+    map_k = mapk(im_labels, image_labels_pred, k=k)
     print(f'mAP@{k}: {map_k}')
+
+    # Compute the accuracy
+    knn_accuracy = knn.score(image_embeddings, image_labels)
+    print('KNN accuracy: {}%'.format(100 * knn_accuracy))
 
     # Qualitative results
     num_samples = 10
     # Create random samples
-    random_samples = np.random.choice(list(range(5000)), num_samples, replace=False)
-
+    random_samples = np.random.choice(image_labels, num_samples, replace=False)
     # im_labels, image_labels_pred
     for sample in random_samples:
         print("Example:" + str(sample))
         print("--------------------------------")
 
-        print("Query text: " + dict_sentences[sample])
+        # Get image embedding from batch
+        filename = list(gt)[sample]
+        print("Ground truth: ")
+        for t in gt[filename]:
+            print(t)
 
-        # Obtain ground truth image, mapping the text sample to the image id
-        gt_image_id = text_labels[sample]
-        # Map the id to the image filename
-        gt_image_filename = list(gt)[gt_image_id - 1]
-        plt.figure(figsize=(20, 10))
-        # Plot the ground truth image
-        plt.subplot(1, k+1, 1)
-        plt.imshow(plt.imread(ROOT_PATH + 'Flickr30k/flickr30k-images/' + gt_image_filename))
-
-        # Get predicted images from that text
         predictions = indices[sample]
-        count = 1
+
+        print("Predictions:")
         for pred in predictions:
-            filename = list(gt)[pred]
-            plt.subplot(1, k+1, count + 1)
-            plt.imshow(plt.imread(ROOT_PATH + 'Flickr30k/flickr30k-images/' + filename))
-            count += 1
+            print(dict_sentences[pred])
+
+        im = plt.imread(ROOT_PATH + 'Flickr30k/flickr30k-images/' + filename)
+        plt.imshow(im)
         plt.show()
         print("--------------------------------------------------------------------------------")
 

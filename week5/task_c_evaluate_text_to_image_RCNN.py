@@ -47,16 +47,15 @@ def extract_embeddings(dataloader, model, out_size=256, model_id=''):
 def main():
     # Load the datasets
     ROOT_PATH = "../../data/"
-    TEST_IMG_EMB = ROOT_PATH + "Flickr30k/test_vgg_features.pkl"
-    TEST_TEXT_EMB = ROOT_PATH + "Flickr30k/test_bert_features.pkl"
+    TEST_IMG_EMB = ROOT_PATH + "Flickr30k/test_FasterRCNN_features.pkl"
+    TEST_TEXT_EMB = ROOT_PATH + "Flickr30k/test_fasttext_features.pkl"
 
     # Method selection
     base = 'TextToImage'
-    text_aggregation = 'BERT'
-    image_features = 'VGG'
-    emb_size = 768
+    text_aggregation = 'mean'
+    image_features = 'FasterRCNN'
     out_size = 4096
-    input_size = 4096
+    input_size = 1024
     info = 'out_size_' + str(out_size)
     model_id = base + '_' + image_features + '_' + text_aggregation + '_textagg_' + info
 
@@ -73,7 +72,7 @@ def main():
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1000, shuffle=False, num_workers=1)
 
     margin = 1.
-    embedding_text_net = EmbeddingTextNet(embedding_size=emb_size, output_size=out_size, sequence_modeling=None)
+    embedding_text_net = EmbeddingTextNet(embedding_size=300, output_size=out_size, sequence_modeling=None)
     embedding_image_net = ResnetFlickr(input_size=input_size, output_size=out_size)
     model = TripletTextImage(embedding_text_net, embedding_image_net, margin=margin)
 
@@ -98,6 +97,7 @@ def main():
 
     # Extract embeddings
     image_embeddings, text_embeddings = extract_embeddings(test_loader, model, out_size, model_id)
+
     # Compute the labels for each embedding
     image_labels = [i for i in range(1, 1000 + 1)]
     text_labels = [j for j in range(1, 1000 + 1) for i in range(5)]  # Trick to obtain the same
@@ -141,7 +141,7 @@ def main():
         gt_image_id = text_labels[sample]
         # Map the id to the image filename
         gt_image_filename = list(gt)[gt_image_id - 1]
-        plt.figure(figsize=(20, 10))
+        plt.figure(figsize=(15, 10))
         # Plot the ground truth image
         plt.subplot(1, k+1, 1)
         plt.imshow(plt.imread(ROOT_PATH + 'Flickr30k/flickr30k-images/' + gt_image_filename))

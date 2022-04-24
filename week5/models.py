@@ -7,6 +7,7 @@ Description:
         - Input: (img, positive_text, negative_text)
 """
 import torch.nn as nn
+import torch
 
 
 # Network definition for the textual aggregation
@@ -14,6 +15,7 @@ class EmbeddingTextNet(nn.Module):
     def __init__(self, embedding_size, output_size, sequence_modeling=None):
         super(EmbeddingTextNet, self).__init__()
         self.sequence_modeling = sequence_modeling
+        self.bnorm = nn.BatchNorm1d(embedding_size)
         # Define a fully connected layer with input of n_input and output n_output neurons
         self.fc1 = nn.Sequential(nn.Linear(embedding_size, 1024),
                                  nn.PReLU(),
@@ -30,6 +32,8 @@ class EmbeddingTextNet(nn.Module):
 
     # forward method
     def forward(self, x):
+
+        x = self.bnorm(x)
         # Apply late fusion aggregation
         if self.sequence_modeling is 'LSTM':
             x = self.lstm(x)  # To Do: Pad the sequences and use last LSTM layer
@@ -48,11 +52,6 @@ class EmbeddingTextNet(nn.Module):
             # Apply LSTM
             _, (h_n, c_n) = self.lstm(x)
             aggregated = h_n[-1]
-        elif text_aggregation_type == 'attention':
-            # Apply attention
-            pass
-        elif text_aggregation_type == 'self_attention':
-            aggregated = self.self_attention(x)
 
         return aggregated
 
@@ -60,8 +59,8 @@ class EmbeddingTextNet(nn.Module):
 # Network definition for the image embedding
 class EmbeddingImageNet(nn.Module):
     def __init__(self, input_size, output_size):
-        super(EmbeddingImageNet, self).__init__()
-
+        super(ResnetFlickr, self).__init__()
+        self.bnorm = nn.BatchNorm1d(num_features=input_size)
         # Define a fully connected layer with input of n_input and output n_output neurons
         self.fc1 = nn.Sequential(nn.Linear(input_size, 2048),
                                  nn.PReLU(),
@@ -72,6 +71,33 @@ class EmbeddingImageNet(nn.Module):
 
     # forward method
     def forward(self, x):
+        x = self.bnorm(x)
+        out = self.fc1(x)
+        out = self.dropout(out)
+        return out
+
+
+# Network Resnet definition for the image embedding
+class ResnetFlickr(nn.Module):
+    def __init__(self, input_size, output_size):
+        super(ResnetFlickr, self).__init__()
+
+        baseline = 'resnet50'
+        self.backbone = torch.hub.load('pytorch/vision:v0.10.0', baseline, pretrained=True)
+
+        self.bnorm = nn.BatchNorm1d(num_features=input_size)
+        # Define a fully connected layer with input of n_input and output n_output neurons
+        self.fc1 = nn.Sequential(nn.Linear(input_size, 2048),
+                                 nn.PReLU(),
+                                 nn.Linear(2048, output_size)
+                                 )  # output_size is the size of the final image embedding
+        # Define a dropout layer with probability p
+        self.dropout = nn.Dropout(p=0.5)
+
+    # forward method
+    def forward(self, x):
+        x = self.backbone(x)
+        x = self.bnorm(x)
         out = self.fc1(x)
         out = self.dropout(out)
         return out
@@ -110,15 +136,14 @@ class TripletTextImage(nn.Module):
 
     def forward(self, text, img1, img2):
         # Get the embeddings for the image and the text
-
         text_embedding = self.embedding_text_net(text)
-        img1_embedding = self.embedding_image_net(img1)
-        img2_embedding = self.embedding_image_net(img2)
+        img1_embedding = self.embedding_image_net(img1.float())
+        img2_embedding = self.embedding_image_net(img2.float())
 
         return text_embedding, img1_embedding, img2_embedding
 
     def get_embedding_pair(self, img, text):
         # Get the embeddings for the image and the text
-        img_embedding = self.embedding_image_net(img)
+        img_embedding = self.embedding_image_net(img.float())
         text_embedding = self.embedding_text_net(text)
         return img_embedding, text_embedding

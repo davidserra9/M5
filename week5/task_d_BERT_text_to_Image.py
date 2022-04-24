@@ -17,7 +17,7 @@ from datasets import Flickr30k, TripletFlickr30kTextToImg
 
 from train import fit
 from losses import TripletLoss
-from models import EmbeddingImageNet, EmbeddingTextNet, TripletImageText, TripletTextImage
+from models import ResnetFlickr, EmbeddingTextNet, TripletImageText, TripletTextImage
 import wandb
 
 wandb.init(project="M5-week5", entity="celulaeucariota")
@@ -76,7 +76,7 @@ def main():
 
     margin = 1.
     embedding_text_net = EmbeddingTextNet(embedding_size=emb_size, output_size=out_size, sequence_modeling=None)
-    embedding_image_net = EmbeddingImageNet(input_size=4096, output_size=out_size)
+    embedding_image_net = ResnetFlickr(input_size=4096, output_size=out_size)
     model = TripletTextImage(embedding_text_net, embedding_image_net, margin=margin)
 
     if cuda:
