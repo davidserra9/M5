@@ -91,7 +91,7 @@ $ python week5/task_{id_task}_{task_info}.py
 ```
 
 The CVPR paper corresponding to all the tasks and experiments devoted to Cross-modal retrieval is available at: [Paper](https://www.overleaf.com/5374743577rshpmzsgynjj)
-The slides corresponding to week 5 experiments, and a summary of the whole module is available at: [Slides](https://docs.google.com/presentation/d/1qiWn6Lgy8bP7voIEu2XeWV4vUKIVyG3bOKP-OrCiRMY/edit?usp=sharing)
+The slides corresponding to week 5 experiments, and a summary of the whole module is available at: [Slides](https://docs.google.com/presentation/d/1o1Fl5NOl7NN7PiBXn-MiY2hKu-Fv2Scwd7yL5iFLggM/edit?usp=sharing)
 
 
 ## References
